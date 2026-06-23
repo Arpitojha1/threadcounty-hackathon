@@ -1,30 +1,21 @@
-import os
 from fastapi import FastAPI
-from dotenv import load_dotenv
-from supabase import create_client, Client
+from fastapi.middleware.cors import CORSMiddleware
+from routers import upload
 
-# Load secrets from the .env file
-load_dotenv()
-
-# Initialize the FastAPI app
 app = FastAPI(title="ThreadCounty API")
 
-# Connect to Supabase
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+# Setup CORS so your Next.js frontend is allowed to talk to this backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"], # Next.js local port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Include our modular routers
+app.include_router(upload.router, prefix="/api", tags=["Uploads"])
 
 @app.get("/")
 def read_root():
-    return {"status": "online", "message": "ThreadCounty Backend API is running."}
-
-@app.get("/test-db")
-def test_db():
-    """A quick test route to verify the database connection"""
-    try:
-        # Tries to read from the profiles table
-        response = supabase.table("profiles").select("*").limit(1).execute()
-        return {"status": "success", "data": response.data}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    return {"status": "online", "message": "ThreadCounty Production Backend is running."}
