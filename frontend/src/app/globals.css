@@ -1,26 +1,289 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * ============================================================
+ *  ThreadCounty Design System — Token Mapping
+ * ============================================================
+ *  Palette (from SKILLS.md):
+ *    loom-iron     #161512  — primary dark surface
+ *    muslin        #F2EDE4  — primary light surface (never pure white)
+ *    shuttle-red   #E8492E  — THE accent. Bold, saturated. CTAs, stat blocks.
+ *    concrete-grey #9B9690  — secondary panels, mid-tone
+ *    dye-indigo    #3D5A52  — success / verified states ONLY
+ *    madder        #C44536  — alerts / warnings ONLY (distinct from shuttle-red)
+ *
+ *  Shadcn Semantic Mapping:
+ *    --primary        → shuttle-red
+ *    --background     → muslin (light) / loom-iron (dark)
+ *    --foreground     → loom-iron (light) / muslin (dark)
+ *    --destructive    → madder   (NOT shuttle-red — must remain distinct)
+ *    --secondary      → concrete-grey
+ *    --accent         → concrete-grey (lighter tint in light mode)
+ *    --muted          → concrete-grey area
+ *    --card           → muslin (light) / slightly lighter than loom-iron (dark)
+ *    --success        → dye-indigo (custom, not standard Shadcn)
+ *
+ *  Radius: 0 everywhere. Cut-corner panels use clip-path, not border-radius.
+ *  Shadows: None on cut-corner panels (flat color blocking + borders).
+ * ============================================================
+ */
 
 @theme inline {
+  /* Colors */
+  --color-loom-iron: #161512;
+  --color-muslin: #F2EDE4;
+  --color-shuttle-red: #E8492E;
+  --color-concrete-grey: #9B9690;
+  --color-dye-indigo: #3D5A52;
+  --color-madder: #C44536;
+
+  /* Shadcn semantic aliases */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Typography */
+  --font-display: var(--font-archivo-black);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-ibm-plex-mono);
+
+  /* Sidebar */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Radius: 0 everywhere — cut-corner panels use clip-path */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================
+ *  LIGHT MODE — muslin background, loom-iron foreground
+ *  --primary → shuttle-red | --destructive → madder
+ * ============================================================ */
+:root {
+  --background: #F2EDE4;         /* muslin */
+  --foreground: #161512;         /* loom-iron */
+  --card: #F2EDE4;               /* muslin */
+  --card-foreground: #161512;    /* loom-iron */
+  --popover: #F2EDE4;
+  --popover-foreground: #161512;
+  --primary: #E8492E;            /* shuttle-red — THE accent */
+  --primary-foreground: #F2EDE4; /* muslin text on shuttle-red */
+  --secondary: #9B9690;          /* concrete-grey */
+  --secondary-foreground: #161512;
+  --muted: #D8D3CA;              /* lighter concrete-grey area */
+  --muted-foreground: #6B6760;   /* darker mid-tone for muted text */
+  --accent: #E2DDD5;             /* light concrete-grey tint */
+  --accent-foreground: #161512;
+  --destructive: #C44536;        /* madder — NOT shuttle-red */
+  --border: #C8C3BA;             /* warm grey border */
+  --input: #C8C3BA;
+  --ring: #E8492E;               /* shuttle-red for focus rings */
+  --radius: 0px;
+
+  /* Charts — ThreadCounty palette */
+  --chart-1: #E8492E;            /* shuttle-red */
+  --chart-2: #9B9690;            /* concrete-grey */
+  --chart-3: #3D5A52;            /* dye-indigo */
+  --chart-4: #C44536;            /* madder */
+  --chart-5: #161512;            /* loom-iron */
+
+  /* Sidebar */
+  --sidebar: #EBE6DD;
+  --sidebar-foreground: #161512;
+  --sidebar-primary: #E8492E;
+  --sidebar-primary-foreground: #F2EDE4;
+  --sidebar-accent: #E2DDD5;
+  --sidebar-accent-foreground: #161512;
+  --sidebar-border: #C8C3BA;
+  --sidebar-ring: #E8492E;
+}
+
+/* ============================================================
+ *  DARK MODE — loom-iron background, muslin foreground
+ *  --primary → shuttle-red | --destructive → madder
+ * ============================================================ */
+.dark {
+  --background: #161512;         /* loom-iron */
+  --foreground: #F2EDE4;         /* muslin */
+  --card: #1E1C18;               /* slightly lighter than loom-iron */
+  --card-foreground: #F2EDE4;
+  --popover: #1E1C18;
+  --popover-foreground: #F2EDE4;
+  --primary: #E8492E;            /* shuttle-red — same in dark mode */
+  --primary-foreground: #F2EDE4;
+  --secondary: #9B9690;          /* concrete-grey */
+  --secondary-foreground: #F2EDE4;
+  --muted: #2A2722;              /* dark muted surface */
+  --muted-foreground: #9B9690;   /* concrete-grey for muted text */
+  --accent: #2A2722;
+  --accent-foreground: #F2EDE4;
+  --destructive: #C44536;        /* madder — NOT shuttle-red */
+  --border: rgba(242, 237, 228, 0.12);  /* muslin at low opacity */
+  --input: rgba(242, 237, 228, 0.15);
+  --ring: #E8492E;
+
+  --chart-1: #E8492E;
+  --chart-2: #9B9690;
+  --chart-3: #3D5A52;
+  --chart-4: #C44536;
+  --chart-5: #F2EDE4;
+
+  --sidebar: #1E1C18;
+  --sidebar-foreground: #F2EDE4;
+  --sidebar-primary: #E8492E;
+  --sidebar-primary-foreground: #F2EDE4;
+  --sidebar-accent: #2A2722;
+  --sidebar-accent-foreground: #F2EDE4;
+  --sidebar-border: rgba(242, 237, 228, 0.12);
+  --sidebar-ring: #E8492E;
+}
+
+/* ============================================================
+ *  BASE STYLES
+ * ============================================================ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================
+ *  CUT-CORNER CLIP-PATH UTILITIES
+ *  Convention: always top-right corner, depth ~18% of shorter side.
+ *  Applied via clip-path polygon. No box-shadow on clipped elements
+ *  (clip-path clips shadows too) — use flat color + borders instead.
+ * ============================================================ */
+
+/* Standard cut: top-right corner, 24px depth */
+.clip-cut-tr {
+  clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%);
+}
+/* Medium cut: 32px */
+.clip-cut-tr-md {
+  clip-path: polygon(0 0, calc(100% - 32px) 0, 100% 32px, 100% 100%, 0 100%);
+}
+/* Large cut: 48px — for hero panels and large cards */
+.clip-cut-tr-lg {
+  clip-path: polygon(0 0, calc(100% - 48px) 0, 100% 48px, 100% 100%, 0 100%);
+}
+/* XL cut: 64px — for full-bleed hero sections */
+.clip-cut-tr-xl {
+  clip-path: polygon(0 0, calc(100% - 64px) 0, 100% 64px, 100% 100%, 0 100%);
+}
+
+/* Bottom-left cut variant — for visual counterpoint */
+.clip-cut-bl {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+}
+.clip-cut-bl-lg {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 48px 100%, 0 calc(100% - 48px));
+}
+
+/* Button cut — smaller, 16px */
+.clip-cut-btn {
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+}
+
+/* ============================================================
+ *  WEAVE GRID TEXTURE
+ *  Low-opacity warp/weft lines for dark section backgrounds.
+ *  Applied via CSS background pattern.
+ * ============================================================ */
+.weave-grid-texture {
+  background-image:
+    linear-gradient(to right, rgba(155, 150, 144, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(155, 150, 144, 0.06) 1px, transparent 1px);
+  background-size: 28px 32px;
+}
+
+.weave-grid-texture-dense {
+  background-image:
+    linear-gradient(to right, rgba(155, 150, 144, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(155, 150, 144, 0.08) 1px, transparent 1px);
+  background-size: 16px 20px;
+}
+
+/* ============================================================
+ *  TYPOGRAPHY UTILITIES
+ * ============================================================ */
+.font-display {
+  font-family: var(--font-archivo-black), system-ui, sans-serif;
+}
+
+.text-tracked {
+  letter-spacing: 0.12em;
+}
+
+.text-tracked-wide {
+  letter-spacing: 0.2em;
+}
+
+/* ============================================================
+ *  MOTION — respect prefers-reduced-motion
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+ *  DESATURATED PHOTOGRAPHY TREATMENT
+ *  Applied to hero/fabric images — color reserved for UI panels.
+ * ============================================================ */
+.img-desaturated {
+  filter: grayscale(100%) contrast(1.1);
+}
+
+.img-duotone {
+  filter: grayscale(100%) contrast(1.1) sepia(0.15);
 }

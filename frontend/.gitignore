@@ -15,6 +15,7 @@ venv/
 !.yarn/versions
 AGENTS.md
 CLAUDE.md
+SKILLS.md
 # testing
 /coverage
 
