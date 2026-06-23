@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { applySessionOnlyRule } from "@/lib/supabase/cookie-utils";
+
 /**
  * Middleware: runs on every matched request.
  *  1. Refreshes the Supabase auth token (reads cookie from request,
@@ -11,6 +13,7 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+  const isSessionOnly = request.cookies.get("threadcounty_session_only")?.value === "true";
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,9 +30,10 @@ export async function middleware(request: NextRequest) {
           );
           // Write cookies to the response so the browser gets the updated token
           supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            const finalOptions = applySessionOnlyRule(options, isSessionOnly);
+            supabaseResponse.cookies.set(name, value, finalOptions);
+          });
         },
       },
     }
@@ -42,11 +46,13 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+  console.log(`Middleware visiting ${pathname}. User: ${user?.id || 'none'}. Cookies:`, request.cookies.getAll().map(c => c.name));
 
   // ── Route protection ────────────────────────────────────────
 
   // Unauthenticated users trying to access protected routes
   if (!user && pathname.startsWith("/dashboard")) {
+    console.log(`Redirecting unauthenticated user from ${pathname} to /login`);
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     return NextResponse.redirect(loginUrl);
@@ -55,6 +61,7 @@ export async function middleware(request: NextRequest) {
   // Authenticated users visiting auth pages — redirect to dashboard
   const authPages = ["/login", "/signup", "/forgot-password"];
   if (user && authPages.includes(pathname)) {
+    console.log(`Redirecting authenticated user from ${pathname} to /dashboard`);
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashboardUrl);

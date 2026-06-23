@@ -7,12 +7,13 @@ import { RecentReports } from "@/components/dashboard/RecentReports";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { Notifications } from "@/components/dashboard/Notifications";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) return null; // Middleware handles redirect
+  if (!user) redirect("/login");
 
   // Fetch data concurrently
   const [

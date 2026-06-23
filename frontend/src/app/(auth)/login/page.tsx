@@ -4,7 +4,6 @@ import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
-import { markSessionOnly, clearSessionOnly } from "@/lib/remember-me";
 import { cn } from "@/lib/utils";
 
 function LoginForm() {
@@ -34,6 +33,14 @@ function LoginForm() {
 
     const supabase = createClient();
 
+    // Set cookie BEFORE sign-in so that the Supabase client catches it
+    // during the internal set() call for the auth token.
+    if (rememberMe) {
+      document.cookie = "threadcounty_session_only=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    } else {
+      document.cookie = "threadcounty_session_only=true; path=/;";
+    }
+
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -41,6 +48,8 @@ function LoginForm() {
 
     if (signInError) {
       setLoading(false);
+      // Clean up the cookie if sign-in failed just in case
+      document.cookie = "threadcounty_session_only=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       const msg = signInError.message.toLowerCase();
       if (msg.includes("invalid login credentials")) {
         setError("Wrong email or password. Please try again.");
@@ -50,13 +59,6 @@ function LoginForm() {
         setError(signInError.message);
       }
       return;
-    }
-
-    // Success
-    if (rememberMe) {
-      clearSessionOnly();
-    } else {
-      markSessionOnly();
     }
 
     router.push("/dashboard");

@@ -1,11 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { HistoryClient } from "@/components/history/HistoryClient";
+import { redirect } from "next/navigation";
 
 export default async function HistoryPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   // We fetch reports and join with uploads to get the image_url
   const { data: reports, error } = await supabase

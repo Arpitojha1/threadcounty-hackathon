@@ -13,5 +13,7 @@ export async function POST(request: NextRequest) {
 
   const loginUrl = request.nextUrl.clone();
   loginUrl.pathname = "/login";
-  return NextResponse.redirect(loginUrl);
+  const response = NextResponse.redirect(loginUrl);
+  response.cookies.delete("threadcounty_session_only");
+  return response;
 }

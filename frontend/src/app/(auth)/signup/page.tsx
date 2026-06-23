@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -59,10 +61,11 @@ export default function SignupPage() {
 
     setLoading(false);
 
-    // 1. Catch standard errors (like weak passwords)
     if (signUpError) {
       let friendlyMsg = signUpError.message;
-      if (signUpError.message.includes("Password should be at least")) {
+      if (!friendlyMsg || friendlyMsg === "{}" || friendlyMsg.trim() === "") {
+        friendlyMsg = "Something went wrong creating your account — please try again.";
+      } else if (friendlyMsg.includes("Password should be at least")) {
         friendlyMsg = "Your password is too weak. Please use at least 6 characters.";
       }
       setError(friendlyMsg);
@@ -77,46 +80,9 @@ export default function SignupPage() {
 
     // 3. If we pass both checks, it was a true success!
     setSuccess(true);
+    router.push("/dashboard");
+    router.refresh();
   };
-
-  if (success) {
-    return (
-      <CutCornerPanel variant="muslin" size="lg" className="w-full p-8 md:p-10 text-center">
-        <div className="flex justify-center mb-6">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="square"
-            strokeLinejoin="miter"
-            className="text-shuttle-red"
-          >
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-          </svg>
-        </div>
-        <h1 className="font-display text-xl uppercase text-loom-iron mb-4">
-          CHECK YOUR EMAIL
-        </h1>
-        <p className="font-sans text-sm text-loom-iron/70 mb-4">
-          We&apos;ve sent a verification link to <span className="font-medium text-loom-iron">{email}</span>. Click the link to activate your account.
-        </p>
-        <p className="font-mono text-xs text-concrete-grey mb-8">
-          Didn&apos;t receive it? Check your spam folder.
-        </p>
-        <a
-          href="/login"
-          className="font-sans text-sm font-semibold text-shuttle-red hover:underline"
-        >
-          Back to sign in
-        </a>
-      </CutCornerPanel>
-    );
-  }
 
   return (
     <CutCornerPanel variant="muslin" size="lg" className="w-full p-8 md:p-10">

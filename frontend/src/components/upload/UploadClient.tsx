@@ -132,6 +132,8 @@ export function UploadClient({ userId }: { userId: string }) {
       const data = await response.json();
       
       if (data.status === "success" && data.report?.id) {
+        // Reset state so component is clean if user navigates back
+        resetSelection();
         // Redirect to results view
         router.push(`/dashboard/results/${data.report.id}`);
       } else {
