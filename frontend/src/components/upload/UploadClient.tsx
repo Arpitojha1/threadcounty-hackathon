@@ -41,6 +41,15 @@ export function UploadClient({ userId }: { userId: string }) {
     return () => clearInterval(interval);
   }, [status]);
 
+  // Clean up object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   const handleFile = (selectedFile: File) => {
     setStatus("idle");
     setErrorMessage(null);
@@ -49,7 +58,22 @@ export function UploadClient({ userId }: { userId: string }) {
       setErrorMessage("Please select a valid image file (JPEG, PNG, etc).");
       return;
     }
+
+    // Validate file size: 10MB limit
+    const maxSizeBytes = 10 * 1024 * 1024;
+    if (selectedFile.size > maxSizeBytes) {
+      setErrorMessage("File exceeds 10MB limit. Please upload a smaller image.");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
     
+    // Revoke previous URL if selecting a new file
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
     setFile(selectedFile);
     setPreviewUrl(URL.createObjectURL(selectedFile));
   };
@@ -81,9 +105,11 @@ export function UploadClient({ userId }: { userId: string }) {
       abortController.abort();
     }, 30000);
 
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/upload`;
+
     try {
       // Do NOT set Content-Type header. Let the browser set the multipart boundary.
-      const response = await fetch("http://127.0.0.1:8000/api/upload", {
+      const response = await fetch(backendUrl, {
         method: "POST",
         body: formData,
         signal: abortController.signal
@@ -127,6 +153,9 @@ export function UploadClient({ userId }: { userId: string }) {
   };
 
   const resetSelection = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setFile(null);
     setPreviewUrl(null);
     setStatus("idle");

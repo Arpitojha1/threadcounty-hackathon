@@ -61,7 +61,11 @@ export default function SignupPage() {
 
     // 1. Catch standard errors (like weak passwords)
     if (signUpError) {
-      setError(signUpError.message);
+      let friendlyMsg = signUpError.message;
+      if (signUpError.message.includes("Password should be at least")) {
+        friendlyMsg = "Your password is too weak. Please use at least 6 characters.";
+      }
+      setError(friendlyMsg);
       return;
     }
 

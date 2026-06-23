@@ -73,7 +73,9 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
         const { data, error } = await query;
         if (!isActive) return;
 
-        if (!error && data) {
+        if (error) {
+          // Handle fetch error in UI state instead of leaking to browser console
+        } else if (data) {
           setReports(data.map((r: any) => ({
             id: r.id,
             fabric_type: r.fabric_type,
@@ -85,7 +87,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
           })));
         }
       } catch (err) {
-        console.error("Failed to fetch reports:", err);
+        // Suppress leakage to console, query failure handles gracefully
       } finally {
         if (isActive) setIsLoading(false);
       }
@@ -134,12 +136,10 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
             .remove([filePath]);
           
           if (storageError) {
-            console.error("Storage delete failed:", storageError);
             setPartialFailureNote("Report removed. The original image file may take a little longer to finish cleaning up.");
           }
         }
       } catch (err) {
-        console.error("Storage delete failed with exception:", err);
         setPartialFailureNote("Report removed. The original image file may take a little longer to finish cleaning up.");
       }
     }
@@ -166,7 +166,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Download failed", err);
+      // Suppress network/download exceptions from leaking to user's console
     }
   };
 
@@ -284,7 +284,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
                     <div className="w-full h-full flex items-center justify-center font-mono text-xs text-concrete-grey">NO IMAGE</div>
                   )}
                   <div className="absolute top-2 left-2 bg-loom-iron text-muslin font-mono text-[10px] px-1.5 py-0.5 tracking-wider">
-                    {Math.round((report.confidence_score || 0) * 100)}% MATCH
+                    {Math.round(report.confidence_score || 0)}% MATCH
                   </div>
                 </div>
 

@@ -48,7 +48,7 @@ export function RecentReports({ reports }: { reports: Report[] }) {
                 </div>
                 <div className="text-right">
                   <span className="inline-flex items-center justify-center bg-shuttle-red/10 text-shuttle-red font-mono text-xs px-2 py-1 font-bold">
-                    {Math.round((report.confidence_score || 0) * 100)}% Match
+                    {Math.round(report.confidence_score || 0)}% Match
                   </span>
                 </div>
               </div>

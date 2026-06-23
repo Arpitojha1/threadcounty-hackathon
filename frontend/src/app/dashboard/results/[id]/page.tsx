@@ -3,7 +3,9 @@ import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
-export default async function ResultsPage({ params }: { params: { id: string } }) {
+export default async function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -26,7 +28,7 @@ export default async function ResultsPage({ params }: { params: { id: string } }
         image_url
       )
     `)
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error || !report) {
@@ -68,7 +70,7 @@ export default async function ResultsPage({ params }: { params: { id: string } }
     }
   }
 
-  const confidencePercent = Math.round((report.confidence_score || 0) * 100);
+  const confidencePercent = Math.round(report.confidence_score || 0);
   const imageUrl = Array.isArray(report.uploads) ? report.uploads[0]?.image_url : (report.uploads as any)?.image_url;
 
   return (
