@@ -13,7 +13,8 @@ venv/
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+AGENTS.md
+CLAUDE.md
 # testing
 /coverage
 
