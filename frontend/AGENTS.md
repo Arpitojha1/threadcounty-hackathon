@@ -38,7 +38,6 @@ Work in this order. Don't jump ahead to polish before a layer is functionally co
 ## Definition of Done (per page/feature)
 
 A page is done when:
-
 - It renders correctly at mobile, tablet, and desktop breakpoints
 - Dark mode is correct, not just "doesn't crash"
 - Any async state (loading, error, empty) is handled visually, not just the happy path

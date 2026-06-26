@@ -203,7 +203,8 @@ export const HERO_STATS: Stat[] = [
 
 // ── Nav links ─────────────────────────────────────────────────
 export const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Workflow", href: "#workflow" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "About", href: "/about" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "FAQ", href: "/faq" },
+  { label: "Contact", href: "/contact" },
 ] as const;

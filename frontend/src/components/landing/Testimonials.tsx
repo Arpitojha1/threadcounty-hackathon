@@ -71,15 +71,20 @@ function TestimonialCard({
   testimonial: (typeof TESTIMONIALS)[number];
 }) {
   return (
-    <CutCornerPanel
-      corner="tr"
-      size="md"
-      variant="loom-iron"
-      bordered
-      className="p-8 h-full flex flex-col"
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className="h-full"
     >
-      {/* Quotation mark */}
-      <span
+      <CutCornerPanel
+        corner="tr"
+        size="md"
+        variant="loom-iron"
+        bordered
+        className="p-8 h-full flex flex-col"
+      >
+        {/* Quotation mark */}
+        <span
         className="font-display text-5xl leading-none text-shuttle-red select-none mb-2"
         aria-hidden="true"
       >
@@ -101,5 +106,6 @@ function TestimonialCard({
         </p>
       </div>
     </CutCornerPanel>
+  </motion.div>
   );
 }

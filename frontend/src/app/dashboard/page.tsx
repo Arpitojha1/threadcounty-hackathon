@@ -7,6 +7,7 @@ import { RecentReports } from "@/components/dashboard/RecentReports";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { Notifications } from "@/components/dashboard/Notifications";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
+import { UpgradeToast } from "@/components/dashboard/UpgradeToast";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
@@ -28,6 +29,7 @@ export default async function DashboardPage() {
       .from("reports")
       .select("id, fabric_type, confidence_score, created_at")
       .eq("user_id", user.id)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(5)
   ]);
@@ -45,6 +47,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="w-full space-y-6">
+      <UpgradeToast />
       <WelcomeSection email={user.email || ""} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

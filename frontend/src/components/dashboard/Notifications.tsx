@@ -3,7 +3,7 @@ import { WeaveGrid } from "@/components/ui/weave-grid";
 
 export function Notifications() {
   return (
-    <CutCornerPanel variant="muslin" size="sm" className="p-6 relative overflow-hidden h-full">
+    <CutCornerPanel variant="muslin" size="sm" bordered className="p-6 relative overflow-hidden h-full">
       <WeaveGrid opacity={0.05} color="loom-iron" density="sparse" />
       <h3 className="font-mono text-xs tracking-widest text-concrete-grey mb-6 uppercase relative z-10">Notifications</h3>
       

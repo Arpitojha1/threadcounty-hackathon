@@ -12,12 +12,13 @@ import { cn } from "@/lib/utils";
  *   on clipped panels either disappear or look broken. This component
  *   uses NO box-shadow. Hierarchy is communicated through bold color
  *   blocking (shuttle-red, concrete-grey, muslin, loom-iron) and
- *   optional 1-2px borders — consistent with the reference direction
- *   which relies on color and scale, not elevation.
+ *   optional 1-2px borders.
  *
- * If shadow is ever genuinely needed: use a wrapper div with the shadow,
- * sized/offset behind the clipped panel. Do not put box-shadow directly
- * on a clipped element.
+ * BORDER IMPLEMENTATION:
+ *   Because CSS `border` is clipped by `clip-path` (leaving no visible
+ *   border along the angled cut), bordered panels use an inset wrapper
+ *   technique. The outer element gets the border color as its background,
+ *   and an inner absolute div provides the panel color inset by 1px.
  */
 
 type CutCorner = "tr" | "bl";
@@ -33,6 +34,8 @@ interface CutCornerPanelProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: PanelVariant;
   /** Show a subtle border for separation. Default: false */
   bordered?: boolean;
+  /** Add interactive hover states (implies bordered). Default: false */
+  interactive?: boolean;
   /** Element to render as. Default: "div" */
   as?: React.ElementType;
   children: React.ReactNode;
@@ -55,20 +58,28 @@ const clipClasses: Record<CutCorner, Record<CutSize, string>> = {
   },
 };
 
-const variantClasses: Record<PanelVariant, string> = {
-  "shuttle-red": "bg-shuttle-red text-muslin",
-  "concrete-grey": "bg-concrete-grey text-loom-iron",
-  "muslin": "bg-muslin text-loom-iron",
-  "loom-iron": "bg-loom-iron text-muslin",
+const textClasses: Record<PanelVariant, string> = {
+  "shuttle-red": "text-muslin",
+  "concrete-grey": "text-loom-iron",
+  "muslin": "text-loom-iron dark:text-muslin",
+  "loom-iron": "text-muslin dark:text-loom-iron",
+  "transparent": "",
+};
+
+const bgClasses: Record<PanelVariant, string> = {
+  "shuttle-red": "bg-shuttle-red",
+  "concrete-grey": "bg-concrete-grey",
+  "muslin": "bg-muslin dark:bg-loom-iron", // Context-aware inversion
+  "loom-iron": "bg-loom-iron dark:bg-muslin",
   "transparent": "bg-transparent",
 };
 
-const borderClasses: Record<PanelVariant, string> = {
-  "shuttle-red": "border border-shuttle-red/30",
-  "concrete-grey": "border border-concrete-grey/40",
-  "muslin": "border border-loom-iron/10",
-  "loom-iron": "border border-muslin/10",
-  "transparent": "border border-concrete-grey/20",
+const borderWrapperClasses: Record<PanelVariant, string> = {
+  "shuttle-red": "bg-shuttle-red/30",
+  "concrete-grey": "bg-concrete-grey/40",
+  "muslin": "bg-loom-iron/20 dark:bg-muslin/20",
+  "loom-iron": "bg-muslin/20 dark:bg-loom-iron/20",
+  "transparent": "bg-concrete-grey/20",
 };
 
 export function CutCornerPanel({
@@ -76,21 +87,50 @@ export function CutCornerPanel({
   size = "md",
   variant = "muslin",
   bordered = false,
+  interactive = false,
   as: Component = "div",
   className,
   children,
   ...props
 }: CutCornerPanelProps) {
+  const needsBorder = bordered || interactive;
+
+  if (!needsBorder) {
+    return (
+      <Component
+        className={cn(
+          clipClasses[corner][size],
+          bgClasses[variant],
+          textClasses[variant],
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </Component>
+    );
+  }
+
+  // Wrapper approach for true borders on clipped elements
   return (
     <Component
       className={cn(
+        "relative z-0 group",
         clipClasses[corner][size],
-        variantClasses[variant],
-        bordered && borderClasses[variant],
+        borderWrapperClasses[variant], // Outer background acts as border color
+        textClasses[variant],
+        interactive && "hover:bg-shuttle-red dark:hover:bg-shuttle-red transition-colors duration-300 cursor-pointer",
         className
       )}
       {...props}
     >
+      <div
+        className={cn(
+          "absolute inset-[1px] -z-10",
+          clipClasses[corner][size],
+          bgClasses[variant]
+        )}
+      />
       {children}
     </Component>
   );

@@ -1,137 +1,117 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Check, Minus } from "lucide-react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
-import { PRICING_TIERS } from "@/data/landing";
+import { PRICING_TIERS } from "@/data/pricing";
 import { cn } from "@/lib/utils";
-
-const container = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.12 },
-  },
-};
-
-const cardMotion = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const },
-  },
-};
 
 export default function Pricing() {
   return (
-    <section
+    <section 
       id="pricing"
-      className="bg-muslin dark:bg-loom-iron py-24"
+      className="py-24 sm:py-32 bg-muslin relative"
     >
-      <div className="mx-auto max-w-7xl px-6">
-        {/* Section header */}
-        <div className="mb-16">
-          <p className="font-mono text-xs text-shuttle-red tracking-widest mb-3">
-            PLANS
-          </p>
-          <h2 className="font-display text-4xl md:text-5xl uppercase text-loom-iron dark:text-muslin">
-            SIMPLE PRICING
-          </h2>
+      <div className="w-full max-w-[1400px] mx-auto px-6">
+        
+        {/* Section Header */}
+        <div className="mb-16 md:mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="max-w-2xl">
+            <h2 className="font-mono text-xs tracking-widest text-concrete-grey mb-4 uppercase">
+              SIMPLE PRICING
+            </h2>
+            <p className="font-display text-4xl sm:text-5xl uppercase text-loom-iron leading-none">
+              Start free. <br />
+              Scale <span className="text-shuttle-red">instantly</span>.
+            </p>
+          </div>
+          <a 
+            href="/pricing"
+            className="shrink-0 group flex items-center gap-2 font-mono text-sm uppercase tracking-wider text-loom-iron hover:text-shuttle-red transition-colors"
+          >
+            <span>Compare all features</span>
+            <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="square" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </a>
         </div>
 
         {/* Pricing cards */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start"
-          variants={container}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          {PRICING_TIERS.map((tier) => (
-            <motion.div
-              key={tier.name}
-              variants={cardMotion}
-              className={cn(tier.highlight && "md:-my-4 md:z-10")}
-            >
-              <CutCornerPanel
-                corner="tr"
-                size="lg"
-                variant={tier.highlight ? "shuttle-red" : "loom-iron"}
-                bordered={!tier.highlight}
-                className={cn(
-                  "p-8 flex flex-col",
-                  tier.highlight && "md:py-12"
-                )}
-              >
-                {/* Tier name */}
-                <span className="font-mono text-xs tracking-widest uppercase opacity-70 mb-4">
-                  {tier.name}
-                </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
+          {PRICING_TIERS.map((tier) => {
+            const isPro = tier.id === 'professional';
+            const isEnterprise = tier.id === 'enterprise';
+            
+            let variant: "muslin" | "shuttle-red" | "loom-iron" | "concrete-grey" = "muslin";
+            if (isPro) variant = "shuttle-red";
+            else if (isEnterprise) variant = "loom-iron";
 
-                {/* Price */}
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="font-display text-5xl">{tier.price}</span>
-                  {tier.period && (
-                    <span className="font-mono text-sm opacity-70">
-                      {tier.period}
-                    </span>
-                  )}
-                </div>
-
-                {/* Description */}
-                <p className="font-sans text-sm opacity-70 mb-8">
-                  {tier.description}
-                </p>
-
-                {/* Feature list */}
-                <ul className="space-y-3 mb-10 flex-1">
-                  {tier.features.map((feature) => (
-                    <li
-                      key={feature.text}
-                      className="flex items-center gap-3 font-sans text-sm"
-                    >
-                      {feature.included ? (
-                        <Check
-                          className={cn(
-                            "h-4 w-4 shrink-0",
-                            tier.highlight
-                              ? "text-muslin"
-                              : "text-dye-indigo"
-                          )}
-                          strokeWidth={2.5}
-                        />
-                      ) : (
-                        <Minus
-                          className="h-4 w-4 shrink-0 text-concrete-grey"
-                          strokeWidth={2}
-                        />
-                      )}
-                      <span
-                        className={cn(
-                          !feature.included && "text-concrete-grey"
-                        )}
-                      >
-                        {feature.text}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA button */}
-                <button
+            return (
+              <div key={tier.id} className={cn("w-full h-full flex", isPro ? "xl:-mt-4" : "")}>
+                <CutCornerPanel
+                  variant={variant}
+                  size="lg"
                   className={cn(
-                    "clip-cut-btn w-full py-3 px-6 font-sans font-semibold text-sm tracking-wide transition-colors",
-                    tier.highlight
-                      ? "bg-muslin text-shuttle-red hover:bg-muslin/90"
-                      : "bg-shuttle-red text-muslin hover:bg-shuttle-red/90"
+                    "p-8 relative flex flex-col w-full min-h-[520px]",
+                    variant === "loom-iron" ? "text-muslin" : variant === "shuttle-red" ? "text-muslin" : "text-loom-iron"
                   )}
                 >
-                  {tier.cta}
-                </button>
-              </CutCornerPanel>
-            </motion.div>
-          ))}
-        </motion.div>
+                  {isPro && (
+                    <div className="absolute top-0 right-0 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 translate-x-2 -translate-y-2 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                      Recommended
+                    </div>
+                  )}
+
+                  <div className="mb-6">
+                    <h3 className="font-display text-2xl uppercase mb-2">{tier.name}</h3>
+                    <p className={cn("font-sans text-sm", variant === "loom-iron" || variant === "shuttle-red" ? "text-muslin/80" : "text-concrete-grey")}>
+                      {tier.description}
+                    </p>
+                  </div>
+
+                  <div className="mb-6 flex items-baseline gap-2">
+                    <span className={cn("font-mono text-5xl font-bold tracking-tight", variant === "shuttle-red" ? "text-muslin" : "")}>
+                      {tier.price}
+                    </span>
+                    <span className={cn("font-mono text-xs uppercase tracking-wider", variant === "loom-iron" || variant === "shuttle-red" ? "text-muslin/70" : "text-concrete-grey")}>
+                      {tier.priceNote}
+                    </span>
+                  </div>
+
+                  <div className={cn(
+                    "mb-6 p-4 border clip-cut-tr-md",
+                    variant === "shuttle-red" ? "border-muslin/30 bg-muslin/10" : "border-loom-iron/10 bg-loom-iron/5"
+                  )}>
+                    <div className="font-mono text-xs uppercase tracking-widest mb-1 opacity-70">Capacity</div>
+                    <div className="font-mono font-bold">{tier.storageText}</div>
+                  </div>
+
+                  <ul className="space-y-4 mb-8 flex-1">
+                    {tier.features.slice(0, 4).map((feature, i) => (
+                      <li key={i} className={cn("flex items-start gap-3", !feature.included && "opacity-50 line-through")}>
+                        <svg className={cn("w-5 h-5 shrink-0 mt-0.5", variant === "shuttle-red" || variant === "loom-iron" ? "text-muslin" : "text-shuttle-red")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="square" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="font-sans text-sm">{feature.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <a
+                    href={tier.id === 'enterprise' ? "/contact" : "/pricing"}
+                    className={cn(
+                      "w-full text-center block clip-cut-btn py-4 font-sans font-semibold uppercase tracking-wider text-sm transition-opacity hover:opacity-90 mt-auto",
+                      variant === "shuttle-red" ? "bg-muslin text-shuttle-red" :
+                      variant === "loom-iron" ? "bg-shuttle-red text-muslin border-none" :
+                      "bg-loom-iron text-muslin"
+                    )}
+                  >
+                    {tier.id === 'enterprise' ? "Contact Sales" : "Get Started"}
+                  </a>
+                </CutCornerPanel>
+              </div>
+            );
+          })}
+        </div>
+
       </div>
     </section>
   );

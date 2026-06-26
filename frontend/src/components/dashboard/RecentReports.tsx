@@ -11,7 +11,7 @@ type Report = {
 export function RecentReports({ reports }: { reports: Report[] }) {
   if (!reports || reports.length === 0) {
     return (
-      <CutCornerPanel variant="muslin" size="sm" className="p-6 h-full">
+      <CutCornerPanel variant="muslin" size="sm" bordered className="p-6 h-full">
         <h3 className="font-mono text-xs tracking-widest text-concrete-grey mb-4 uppercase">Recent Reports</h3>
         <p className="font-sans text-sm text-loom-iron/60">No reports generated yet.</p>
       </CutCornerPanel>
@@ -19,7 +19,7 @@ export function RecentReports({ reports }: { reports: Report[] }) {
   }
 
   return (
-    <CutCornerPanel variant="muslin" size="sm" className="p-6 h-full">
+    <CutCornerPanel variant="muslin" size="sm" bordered className="p-6 h-full">
       <h3 className="font-mono text-xs tracking-widest text-concrete-grey mb-6 uppercase">Recent Reports</h3>
       <div className="space-y-4">
         {reports.map((report) => (
@@ -30,12 +30,9 @@ export function RecentReports({ reports }: { reports: Report[] }) {
           >
             <CutCornerPanel
               variant="transparent"
-              bordered
+              interactive
               size="sm"
-              className={cn(
-                "p-4 border-loom-iron/10 transition-colors",
-                "group-hover:border-shuttle-red/30 group-hover:bg-white"
-              )}
+              className="p-4 bg-white/50 dark:bg-white/5"
             >
               <div className="flex items-center justify-between">
                 <div>

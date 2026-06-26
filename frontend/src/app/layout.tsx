@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo_Black, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
 /*
@@ -58,7 +59,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <main className="flex-1 flex flex-col">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );

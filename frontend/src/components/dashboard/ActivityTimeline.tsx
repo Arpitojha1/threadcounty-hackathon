@@ -13,7 +13,7 @@ export function ActivityTimeline({ items }: { items: TimelineItem[] }) {
   }
 
   return (
-    <CutCornerPanel variant="transparent" bordered size="sm" className="p-6 h-full border-loom-iron/10 dark:border-muslin/10 bg-white dark:bg-loom-iron">
+    <CutCornerPanel variant="transparent" bordered size="sm" className="p-6 h-full bg-white dark:bg-loom-iron">
       <h3 className="font-mono text-xs tracking-widest text-concrete-grey mb-6 uppercase">Activity Feed</h3>
       
       <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-loom-iron/10 before:to-transparent">

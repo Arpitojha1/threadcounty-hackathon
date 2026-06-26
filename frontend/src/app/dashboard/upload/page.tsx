@@ -10,6 +10,15 @@ export default async function UploadPage() {
     redirect("/login");
   }
 
+  // Get user's tier to enforce UI limits (model selection)
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("plan_tier")
+    .eq("user_id", user.id)
+    .single();
+
+  const tier = subscription?.plan_tier || "free";
+
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="mb-8">
@@ -21,7 +30,7 @@ export default async function UploadPage() {
         </p>
       </div>
 
-      <UploadClient userId={user.id} />
+      <UploadClient userId={user.id} tier={tier} />
     </div>
   );
 }

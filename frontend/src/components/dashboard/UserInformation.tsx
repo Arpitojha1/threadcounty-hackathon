@@ -10,7 +10,7 @@ export function UserInformation({ createdAt }: { createdAt: string }) {
   });
 
   return (
-    <CutCornerPanel variant="loom-iron" size="sm" className="p-6 h-full border border-loom-iron/10 dark:border-muslin/10">
+    <CutCornerPanel variant="loom-iron" size="sm" bordered className="p-6 h-full">
       <h3 className="font-mono text-xs tracking-widest text-concrete-grey mb-4 uppercase">User Profile</h3>
       <div className="space-y-4">
         <div>

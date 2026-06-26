@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { ShareReportButton } from "@/components/results/ShareReportButton";
 
 export default async function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -29,6 +30,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
       )
     `)
     .eq("id", id)
+    .is("deleted_at", null)
     .single();
 
   if (error || !report) {
@@ -88,10 +90,11 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
             })}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <Link href="/dashboard/history" className="px-4 py-2 font-sans text-sm font-medium text-concrete-grey hover:text-loom-iron dark:hover:text-muslin transition-colors">
             &larr; Back to History
           </Link>
+          <ShareReportButton />
           <Link href="/dashboard/upload" className="clip-cut-btn bg-shuttle-red text-muslin px-4 py-2 font-sans text-sm font-semibold hover:opacity-90 transition-opacity">
             Analyze Another
           </Link>

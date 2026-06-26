@@ -15,12 +15,13 @@ const LOADING_MESSAGES = [
   "Finalizing AI report..."
 ];
 
-export function UploadClient({ userId }: { userId: string }) {
+export function UploadClient({ userId, tier }: { userId: string, tier: string }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<"standard" | "precision">("standard");
   
   const [isDragging, setIsDragging] = useState(false);
   
@@ -97,6 +98,7 @@ export function UploadClient({ userId }: { userId: string }) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("user_id", userId);
+    formData.append("ai_model", selectedModel);
     
     const abortController = new AbortController();
     
@@ -105,7 +107,9 @@ export function UploadClient({ userId }: { userId: string }) {
       abortController.abort();
     }, 30000);
 
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/upload`;
+    const apiUrlRaw = process.env.NEXT_PUBLIC_API_URL;
+    const baseUrl = apiUrlRaw !== undefined ? apiUrlRaw : 'http://127.0.0.1:8000';
+    const backendUrl = `${baseUrl}/api/upload`;
 
     try {
       // Do NOT set Content-Type header. Let the browser set the multipart boundary.
@@ -122,9 +126,15 @@ export function UploadClient({ userId }: { userId: string }) {
         let detail = "An unknown error occurred on the server.";
         try {
           const errData = await response.json();
-          detail = errData.detail || detail;
-        } catch {
-          // Response wasn't JSON
+          detail = errData.detail || errData.message || detail;
+          if (response.status === 402) {
+             throw new Error(`Limit Exceeded: ${detail}`);
+          }
+          if (response.status === 403) {
+             throw new Error(`Access Denied: ${detail}`);
+          }
+        } catch (e: any) {
+          if (e.message?.startsWith("Limit Exceeded") || e.message?.startsWith("Access Denied")) throw e;
         }
         throw new Error(`API Error: ${response.status} - ${detail}`);
       }
@@ -146,6 +156,10 @@ export function UploadClient({ userId }: { userId: string }) {
       
       if (err.name === "AbortError") {
         setErrorMessage("This is taking longer than expected. The server may be busy — you can try again.");
+      } else if (err.message.startsWith("Limit Exceeded: ")) {
+        setErrorMessage(err.message.replace("Limit Exceeded: ", ""));
+      } else if (err.message.startsWith("Access Denied: ")) {
+        setErrorMessage(err.message.replace("Access Denied: ", ""));
       } else if (err.message.includes("API Error")) {
         setErrorMessage(err.message);
       } else {
@@ -205,9 +219,18 @@ export function UploadClient({ userId }: { userId: string }) {
   return (
     <div className="space-y-6">
       {errorMessage && (
-        <div className="bg-madder/10 border border-madder/30 text-madder text-sm p-4 font-sans flex items-start gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          <p>{errorMessage}</p>
+        <div className="bg-madder/10 border border-madder/30 text-madder text-sm p-4 font-sans flex flex-col gap-2">
+          <div className="flex items-start gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <p>{errorMessage}</p>
+          </div>
+          {errorMessage.includes("Upgrade to Pro") && (
+            <div className="ml-8 mt-2">
+              <a href="/dashboard/billing" className="inline-block bg-madder text-white px-4 py-2 font-medium clip-cut-btn text-xs uppercase tracking-wider hover:bg-madder/90 transition-colors">
+                View Plans & Upgrade
+              </a>
+            </div>
+          )}
         </div>
       )}
 
@@ -256,7 +279,7 @@ export function UploadClient({ userId }: { userId: string }) {
         </div>
       ) : (
         // Preview State
-        <CutCornerPanel variant="transparent" bordered size="lg" className="p-6 bg-white dark:bg-[#1E1C18] border-loom-iron/10 dark:border-muslin/10">
+        <CutCornerPanel variant="muslin" bordered size="lg" className="p-6">
           <div className="flex flex-col md:flex-row gap-8">
             <div className="w-full md:w-1/2 aspect-square bg-loom-iron/5 dark:bg-muslin/5 relative overflow-hidden group">
               <WeaveGrid opacity={0.05} color="loom-iron" density="sparse" />
@@ -273,6 +296,16 @@ export function UploadClient({ userId }: { userId: string }) {
                   Remove Image
                 </button>
               </div>
+              <button
+                onClick={resetSelection}
+                className="absolute top-2 right-2 z-30 w-8 h-8 flex items-center justify-center bg-loom-iron text-muslin rounded hover:bg-shuttle-red transition-colors"
+                aria-label="Remove selected file"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
             
             <div className="w-full md:w-1/2 flex flex-col justify-center">
@@ -285,6 +318,43 @@ export function UploadClient({ userId }: { userId: string }) {
               </p>
               
               <div className="space-y-4">
+                {/* AI Model Chooser */}
+                <div className="p-4 border border-muslin/30 bg-loom-iron/5 dark:bg-muslin/5">
+                  <div className="font-mono text-xs uppercase tracking-widest text-loom-iron/70 dark:text-muslin/70 mb-3 flex items-center justify-between">
+                    <span>AI Model</span>
+                    {tier === "free" && (
+                      <a href="/dashboard/billing" className="text-shuttle-red hover:underline ml-2">Upgrade for Precision</a>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setSelectedModel("standard")}
+                      className={cn(
+                        "flex-1 font-sans text-xs font-semibold py-2 px-2 text-center border transition-colors",
+                        selectedModel === "standard" 
+                          ? "bg-shuttle-red text-muslin border-shuttle-red" 
+                          : "bg-transparent text-loom-iron dark:text-muslin border-loom-iron/30 dark:border-muslin/30 hover:border-shuttle-red/50"
+                      )}
+                    >
+                      Standard Vision
+                    </button>
+                    <button 
+                      disabled={tier === "free"}
+                      onClick={() => setSelectedModel("precision")}
+                      title={tier === "free" ? "Requires Student or Professional plan" : ""}
+                      className={cn(
+                        "flex-1 font-sans text-xs font-semibold py-2 px-2 text-center border transition-colors",
+                        tier === "free" ? "opacity-50 cursor-not-allowed bg-transparent text-loom-iron/50 dark:text-muslin/50 border-loom-iron/10 dark:border-muslin/10" :
+                        selectedModel === "precision" 
+                          ? "bg-shuttle-red text-muslin border-shuttle-red" 
+                          : "bg-transparent text-loom-iron dark:text-muslin border-loom-iron/30 dark:border-muslin/30 hover:border-shuttle-red/50"
+                      )}
+                    >
+                      Precision Vision
+                    </button>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleSubmit}
                   className="w-full clip-cut-btn bg-shuttle-red text-muslin px-6 py-4 font-sans font-semibold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"

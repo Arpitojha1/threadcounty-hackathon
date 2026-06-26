@@ -36,6 +36,8 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
   useEffect(() => {
     let isActive = true;
 
+    const abortController = new AbortController();
+    
     // 400ms debounce for real server-side queries
     const timer = setTimeout(async () => {
       setIsLoading(true);
@@ -53,6 +55,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
               file_name
             )
           `)
+          .is("deleted_at", null)
           .order("created_at", { ascending: false });
 
         if (confFilter > 0) {
@@ -70,7 +73,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
           query = query.ilike("fabric_type", `%${term}%`);
         }
 
-        const { data, error } = await query;
+        const { data, error } = await query.abortSignal(abortController.signal);
         if (!isActive) return;
 
         if (error) {
@@ -96,6 +99,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
     return () => {
       isActive = false;
       clearTimeout(timer);
+      abortController.abort();
     };
   }, [search, confFilter, dateFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -108,10 +112,10 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
     setDeleteError(null);
     setPartialFailureNote(null);
 
-    // 1. DELETE DB ROW FIRST
+    // 1. SOFT DELETE DB ROW
     const { error: dbError } = await supabase
       .from("reports")
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq("id", deleteId);
 
     if (dbError) {
@@ -120,29 +124,12 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
       return;
     }
 
-    // DB delete succeeded. Remove from UI immediately.
+    // DB update succeeded. Remove from UI immediately.
     setReports((prev) => prev.filter((r) => r.id !== deleteId));
     setDeleteId(null);
     setIsDeleting(false);
-
-    // 2. DELETE STORAGE FILE SECOND
-    if (reportToDelete.image_url) {
-      try {
-        const parts = reportToDelete.image_url.split("/fabric-images/");
-        if (parts.length === 2) {
-          const filePath = parts[1];
-          const { error: storageError } = await supabase.storage
-            .from("fabric-images")
-            .remove([filePath]);
-          
-          if (storageError) {
-            setPartialFailureNote("Report removed. The original image file may take a little longer to finish cleaning up.");
-          }
-        }
-      } catch (err) {
-        setPartialFailureNote("Report removed. The original image file may take a little longer to finish cleaning up.");
-      }
-    }
+    
+    // Note: We deliberately do NOT delete the storage file here per the soft-delete architecture.
   };
 
   const handleDownloadImage = async (report: Report, e: React.MouseEvent) => {
@@ -198,7 +185,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
       )}
       
       {/* Filters Bar */}
-      <CutCornerPanel variant="muslin" size="sm" className="p-6">
+      <CutCornerPanel variant="muslin" size="sm" bordered className="p-6">
         <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
           
           <div className="w-full lg:w-1/3">
@@ -273,7 +260,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
           </div>
         ) : (
           reports.map((report) => (
-            <CutCornerPanel key={report.id} variant="transparent" bordered size="sm" className="bg-white dark:bg-[#1E1C18] border-loom-iron/10 dark:border-muslin/10 overflow-hidden">
+            <CutCornerPanel key={report.id} variant="muslin" bordered size="sm" className="overflow-hidden">
               <div className="flex flex-col sm:flex-row">
                 
                 {/* Thumbnail */}
@@ -343,7 +330,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
       {/* Delete Confirmation Modal */}
       {deleteId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-loom-iron/80 backdrop-blur-sm p-4">
-          <CutCornerPanel variant="muslin" size="sm" className="w-full max-w-md p-6 shadow-2xl">
+          <CutCornerPanel variant="muslin" size="sm" bordered className="w-full max-w-md p-6 shadow-2xl">
             <h3 className="font-display text-xl uppercase text-loom-iron mb-2">Delete Report?</h3>
             <p className="font-sans text-sm text-concrete-grey mb-6">
               This will permanently delete the analysis data and the uploaded fabric image. This action cannot be undone.

@@ -1,5 +1,6 @@
 import uuid
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi.responses import JSONResponse
 from core.database import supabase
 from services.mock_ai import analyze_fabric_image
 
@@ -8,9 +9,40 @@ router = APIRouter()
 @router.post("/upload")
 async def upload_fabric_image(
     file: UploadFile = File(...),
-    user_id: str = Form(...) # We require the frontend to tell us whose account this is
+    user_id: str = Form(...), # We require the frontend to tell us whose account this is
+    ai_model: str = Form("standard")
 ):
     try:
+        # Check Upload Limits before processing
+        profile_res = supabase.table("profiles").select("tier").eq("id", user_id).execute()
+        tier = profile_res.data[0]["tier"] if profile_res.data and "tier" in profile_res.data[0] else "free"
+        
+        limits = {"free": 5, "student": 100, "professional": 100, "enterprise": None}
+        limit = limits.get(tier, 5)
+        
+        if limit is not None:
+            # Count current month uploads unconditionally
+            from datetime import datetime
+            start_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+            count_res = supabase.table("uploads").select("id", count="exact").eq("user_id", user_id).gte("created_at", start_of_month).execute()
+            current_count = count_res.count if count_res.count is not None else 0
+            
+            if current_count >= limit:
+                return JSONResponse(status_code=402, content={
+                    "status": "error",
+                    "code": "upload_limit_exceeded",
+                    "message": f"You've used all {limit} uploads for this month. Upgrade to Pro for 100 uploads/month.",
+                    "current_count": current_count,
+                    "limit": limit
+                })
+        
+        if ai_model == "precision" and tier == "free":
+            return JSONResponse(status_code=403, content={
+                "status": "error",
+                "code": "precision_model_not_allowed",
+                "message": "Precision Vision model requires Student or Professional plan."
+            })
+
         # 1. Read the file into memory
         file_bytes = await file.read()
         file_extension = file.filename.split('.')[-1]

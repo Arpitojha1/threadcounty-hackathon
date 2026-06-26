@@ -51,11 +51,22 @@ export async function middleware(request: NextRequest) {
   // ── Route protection ────────────────────────────────────────
 
   // Unauthenticated users trying to access protected routes
-  if (!user && pathname.startsWith("/dashboard")) {
+  if (!user && (pathname.startsWith("/dashboard") || pathname.startsWith("/admin"))) {
     console.log(`Redirecting unauthenticated user from ${pathname} to /login`);
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Admin users checking
+  if (user && pathname.startsWith("/admin")) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') {
+      console.log(`Redirecting unauthorized user from ${pathname} to /dashboard`);
+      const dashboardUrl = request.nextUrl.clone();
+      dashboardUrl.pathname = "/dashboard";
+      return NextResponse.redirect(dashboardUrl);
+    }
   }
 
   // Authenticated users visiting auth pages — redirect to dashboard
