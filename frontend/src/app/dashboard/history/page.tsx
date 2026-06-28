@@ -8,7 +8,7 @@ export default async function HistoryPage() {
 
   if (!user) redirect("/login");
 
-  // We fetch reports and join with uploads to get the image_url
+  // We fetch reports directly, including image_url which is stored on the report
   const { data: reports, error } = await supabase
     .from("reports")
     .select(`
@@ -17,10 +17,7 @@ export default async function HistoryPage() {
       confidence_score,
       created_at,
       ai_suggestions,
-      uploads (
-        image_url,
-        file_name
-      )
+      image_url
     `)
     .eq("user_id", user.id)
     .is("deleted_at", null)
@@ -37,7 +34,7 @@ export default async function HistoryPage() {
     confidence_score: r.confidence_score,
     created_at: r.created_at,
     ai_suggestions: r.ai_suggestions,
-    image_url: r.uploads?.image_url,
+    image_url: r.image_url,
     file_name: r.uploads?.file_name
   }));
 

@@ -83,6 +83,8 @@ Do not invent a separate roles table. `profiles.role` is the single source of tr
 | `pro` | $49/month | 100 uploads/month | Requires real Stripe payment |
 | `custom` | Negotiated | Unlimited | Admin-assigned, no self-serve Stripe |
 
+**Billing Logic Note:** Quota is period-scoped via `current_period_start`/`current_period_end`, not cumulative against all-time `uploads` rows. Upgrading resets the period to `now()` and grants a full fresh quota regardless of prior usage in the old period.
+
 `subscriptions` row structure (existing table, add columns if needed but document additions):
 - `user_id` — FK to `profiles`
 - `plan` — `'free'` | `'pro'` | `'custom'`

@@ -50,10 +50,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
             confidence_score,
             created_at,
             ai_suggestions,
-            uploads (
-              image_url,
-              file_name
-            )
+            image_url
           `)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
@@ -85,8 +82,8 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
             confidence_score: r.confidence_score,
             created_at: r.created_at,
             ai_suggestions: r.ai_suggestions,
-            image_url: r.uploads?.image_url,
-            file_name: r.uploads?.file_name
+            image_url: r.image_url,
+            file_name: undefined // Removed file_name as it's not present on reports
           })));
         }
       } catch (err) {

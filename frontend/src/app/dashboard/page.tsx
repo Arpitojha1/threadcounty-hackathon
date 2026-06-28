@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase
       .from("uploads")
-      .select("file_size", { count: "exact" })
+      .select("file_size_bytes", { count: "exact" })
       .eq("user_id", user.id),
     supabase
       .from("reports")
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
       .limit(5)
   ]);
 
-  const totalBytes = storageData?.reduce((acc, row) => acc + (row.file_size || 0), 0) || 0;
+  const totalBytes = storageData?.reduce((acc, row) => acc + (row.file_size_bytes || 0), 0) || 0;
   const recentReports = reportsData || [];
 
   // Construct timeline from reports

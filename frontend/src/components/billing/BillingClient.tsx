@@ -64,7 +64,7 @@ export function BillingClient({ subscription, usage }: { subscription: any; usag
             </div>
             {currentPeriodEnd && (
               <p className="text-sm text-concrete-grey mt-2">
-                Renews on {new Date(currentPeriodEnd).toLocaleDateString()}
+                Renews on {new Date(currentPeriodEnd).toLocaleDateString('en-US')}
               </p>
             )}
           </div>
