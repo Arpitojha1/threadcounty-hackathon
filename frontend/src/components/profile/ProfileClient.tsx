@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+type ProfileClientProps = {
+  isAdmin: boolean;
+};
+
 type ProfileState = {
   email: string;
   password: string;
@@ -50,7 +54,7 @@ function profileReducer(state: ProfileState, action: ProfileAction): ProfileStat
   }
 }
 
-export function ProfileClient() {
+export function ProfileClient({ isAdmin }: ProfileClientProps) {
   const [state, dispatch] = useReducer(profileReducer, initialState);
   const { email, password, passLoading, deleteLoading, passMessage } = state;
 
