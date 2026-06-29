@@ -1,37 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useReducer, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { WeaveGrid } from "@/components/ui/weave-grid";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
+type FormState = {
+  password: string;
+  confirmPassword: string;
+  loading: boolean;
+  error: string | null;
+  passwordError: string;
+  confirmError: string;
+};
+
+type FormAction =
+  | { type: 'fieldChanged'; name: keyof Pick<FormState, 'password' | 'confirmPassword'>; value: string }
+  | { type: 'submitStarted' }
+  | { type: 'submitFailed'; error: string }
+  | { type: 'submitSucceeded' }
+  | { type: 'setErrors'; payload: Partial<FormState> };
+
+const initialState: FormState = {
+  password: '',
+  confirmPassword: '',
+  loading: false,
+  error: null,
+  passwordError: '',
+  confirmError: '',
+};
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case 'fieldChanged':
+      return { ...state, [action.name]: action.value };
+    case 'submitStarted':
+      return { ...state, loading: true, error: null, passwordError: '', confirmError: '' };
+    case 'submitFailed':
+      return { ...state, loading: false, error: action.error };
+    case 'submitSucceeded':
+      return { ...state, loading: false };
+    case 'setErrors':
+      return { ...state, ...action.payload };
+    default:
+      return state;
+  }
+}
+
 export default function ResetPasswordPage() {
   const router = useRouter();
   
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Inline validation errors
-  const [passwordError, setPasswordError] = useState("");
-  const [confirmError, setConfirmError] = useState("");
+  const [state, dispatch] = useReducer(formReducer, initialState);
+  const { password, confirmPassword, loading, error, passwordError, confirmError } = state;
 
   const validate = () => {
     let isValid = true;
-    setPasswordError("");
-    setConfirmError("");
+    let errorsToSet: Partial<FormState> = { passwordError: "", confirmError: "" };
 
     if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters.");
+      errorsToSet.passwordError = "Password must be at least 6 characters.";
       isValid = false;
     }
     if (password !== confirmPassword) {
-      setConfirmError("Passwords do not match.");
+      errorsToSet.confirmError = "Passwords do not match.";
       isValid = false;
     }
+    
+    dispatch({ type: 'setErrors', payload: errorsToSet });
     return isValid;
   };
 
@@ -39,8 +76,7 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     if (!validate()) return;
 
-    setLoading(true);
-    setError(null);
+    dispatch({ type: 'submitStarted' });
 
     const supabase = createClient();
 
@@ -48,12 +84,12 @@ export default function ResetPasswordPage() {
       password,
     });
 
-    setLoading(false);
-
     if (updateError) {
-      setError(updateError.message);
+      dispatch({ type: 'submitFailed', error: updateError.message });
       return;
     }
+
+    dispatch({ type: 'submitSucceeded' });
 
     // Success - redirect to login
     router.push("/login?message=password_reset");
@@ -102,7 +138,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => dispatch({ type: 'fieldChanged', name: 'password', value: e.target.value })}
                 className="bg-white/80 border border-loom-iron/15 px-4 py-3 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors"
               />
               {passwordError && (
@@ -122,7 +158,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 required
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => dispatch({ type: 'fieldChanged', name: 'confirmPassword', value: e.target.value })}
                 className="bg-white/80 border border-loom-iron/15 px-4 py-3 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors"
               />
               {confirmError && (

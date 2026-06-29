@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { PRICING_TIERS } from "@/data/pricing";
@@ -23,7 +24,7 @@ export default function Pricing() {
               Scale <span className="text-shuttle-red">instantly</span>.
             </p>
           </div>
-          <a 
+          <Link 
             href="/pricing"
             className="shrink-0 group flex items-center gap-2 font-mono text-sm uppercase tracking-wider text-loom-iron hover:text-shuttle-red transition-colors"
           >
@@ -31,7 +32,7 @@ export default function Pricing() {
             <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="square" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
             </svg>
-          </a>
+          </Link>
         </div>
 
         {/* Pricing cards */}
@@ -55,7 +56,7 @@ export default function Pricing() {
                   )}
                 >
                   {isPro && (
-                    <div className="absolute top-0 right-0 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 translate-x-2 -translate-y-2 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                    <div className="absolute top-4 right-8 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
                       Recommended
                     </div>
                   )}

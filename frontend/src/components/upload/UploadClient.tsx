@@ -1,6 +1,7 @@
 "use client";
+import Link from "next/link";
 
-import { useState, useRef, useEffect } from "react";
+import { useReducer, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
@@ -15,28 +16,72 @@ const LOADING_MESSAGES = [
   "Finalizing AI report..."
 ];
 
+type UploadState = {
+  file: File | null;
+  previewUrl: string | null;
+  selectedModel: "standard" | "precision";
+  isDragging: boolean;
+  status: "idle" | "uploading" | "error";
+  errorMessage: string | null;
+  loadingStep: number;
+};
+
+type UploadAction =
+  | { type: 'setFile'; file: File | null; previewUrl: string | null }
+  | { type: 'setSelectedModel'; model: "standard" | "precision" }
+  | { type: 'setIsDragging'; isDragging: boolean }
+  | { type: 'setStatus'; status: "idle" | "uploading" | "error" }
+  | { type: 'setErrorMessage'; errorMessage: string | null }
+  | { type: 'incrementLoadingStep'; max: number }
+  | { type: 'reset' }
+  | { type: 'startUpload' };
+
+const initialUploadState: UploadState = {
+  file: null,
+  previewUrl: null,
+  selectedModel: "standard",
+  isDragging: false,
+  status: "idle",
+  errorMessage: null,
+  loadingStep: 0,
+};
+
+function uploadReducer(state: UploadState, action: UploadAction): UploadState {
+  switch (action.type) {
+    case 'setFile':
+      return { ...state, file: action.file, previewUrl: action.previewUrl, status: "idle", errorMessage: null };
+    case 'setSelectedModel':
+      return { ...state, selectedModel: action.model };
+    case 'setIsDragging':
+      return { ...state, isDragging: action.isDragging };
+    case 'setStatus':
+      return { ...state, status: action.status };
+    case 'setErrorMessage':
+      return { ...state, errorMessage: action.errorMessage };
+    case 'incrementLoadingStep':
+      return { ...state, loadingStep: state.loadingStep < action.max ? state.loadingStep + 1 : state.loadingStep };
+    case 'reset':
+      return { ...initialUploadState, selectedModel: state.selectedModel };
+    case 'startUpload':
+      return { ...state, status: "uploading", errorMessage: null, loadingStep: 0 };
+    default:
+      return state;
+  }
+}
+
 export function UploadClient({ userId, tier }: { userId: string, tier: string }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<"standard" | "precision">("standard");
-  
-  const [isDragging, setIsDragging] = useState(false);
-  
-  type Status = "idle" | "uploading" | "error";
-  const [status, setStatus] = useState<Status>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  const [loadingStep, setLoadingStep] = useState(0);
+  const [state, dispatch] = useReducer(uploadReducer, initialUploadState);
+  const { file, previewUrl, selectedModel, isDragging, status, errorMessage, loadingStep } = state;
 
   // Cycle loading messages when uploading
   useEffect(() => {
     if (status !== "uploading") return;
     
     const interval = setInterval(() => {
-      setLoadingStep((prev) => (prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev));
+      dispatch({ type: 'incrementLoadingStep', max: LOADING_MESSAGES.length - 1 });
     }, 2000); // Change message every 2 seconds
     
     return () => clearInterval(interval);
@@ -52,18 +97,18 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
   }, [previewUrl]);
 
   const handleFile = (selectedFile: File) => {
-    setStatus("idle");
-    setErrorMessage(null);
+    dispatch({ type: 'setStatus', status: "idle" });
+    dispatch({ type: 'setErrorMessage', errorMessage: null });
     
     if (!selectedFile.type.startsWith("image/")) {
-      setErrorMessage("Please select a valid image file (JPEG, PNG, etc).");
+      dispatch({ type: 'setErrorMessage', errorMessage: "Please select a valid image file (JPEG, PNG, etc)." });
       return;
     }
 
     // Validate file size: 10MB limit
     const maxSizeBytes = 10 * 1024 * 1024;
     if (selectedFile.size > maxSizeBytes) {
-      setErrorMessage("File exceeds 10MB limit. Please upload a smaller image.");
+      dispatch({ type: 'setErrorMessage', errorMessage: "File exceeds 10MB limit. Please upload a smaller image." });
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -75,13 +120,12 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
       URL.revokeObjectURL(previewUrl);
     }
 
-    setFile(selectedFile);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
+    dispatch({ type: 'setFile', file: selectedFile, previewUrl: URL.createObjectURL(selectedFile) });
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    dispatch({ type: 'setIsDragging', isDragging: false });
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFile(e.dataTransfer.files[0]);
@@ -91,9 +135,7 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
   const handleSubmit = async () => {
     if (!file) return;
     
-    setStatus("uploading");
-    setErrorMessage(null);
-    setLoadingStep(0);
+    dispatch({ type: 'startUpload' });
     
     const formData = new FormData();
     formData.append("file", file);
@@ -152,18 +194,18 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
       
     } catch (err: any) {
       clearTimeout(timeoutId);
-      setStatus("error");
+      dispatch({ type: 'setStatus', status: "error" });
       
       if (err.name === "AbortError") {
-        setErrorMessage("This is taking longer than expected. The server may be busy — you can try again.");
+        dispatch({ type: 'setErrorMessage', errorMessage: "This is taking longer than expected. The server may be busy — you can try again." });
       } else if (err.message.startsWith("Limit Exceeded: ")) {
-        setErrorMessage(err.message.replace("Limit Exceeded: ", ""));
+        dispatch({ type: 'setErrorMessage', errorMessage: err.message.replace("Limit Exceeded: ", "") });
       } else if (err.message.startsWith("Access Denied: ")) {
-        setErrorMessage(err.message.replace("Access Denied: ", ""));
+        dispatch({ type: 'setErrorMessage', errorMessage: err.message.replace("Access Denied: ", "") });
       } else if (err.message.includes("API Error")) {
-        setErrorMessage(err.message);
+        dispatch({ type: 'setErrorMessage', errorMessage: err.message });
       } else {
-        setErrorMessage("Network error: Unable to reach the processing server. Ensure the backend is running.");
+        dispatch({ type: 'setErrorMessage', errorMessage: "Network error: Unable to reach the processing server. Ensure the backend is running." });
       }
     }
   };
@@ -172,10 +214,7 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
-    setFile(null);
-    setPreviewUrl(null);
-    setStatus("idle");
-    setErrorMessage(null);
+    dispatch({ type: 'reset' });
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -226,9 +265,9 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
           </div>
           {errorMessage.includes("Upgrade to Pro") && (
             <div className="ml-8 mt-2">
-              <a href="/dashboard/billing" className="inline-block bg-madder text-white px-4 py-2 font-medium clip-cut-btn text-xs uppercase tracking-wider hover:bg-madder/90 transition-colors">
+              <Link href="/dashboard/billing" className="inline-block bg-madder text-white px-4 py-2 font-medium clip-cut-btn text-xs uppercase tracking-wider hover:bg-madder/90 transition-colors">
                 View Plans & Upgrade
-              </a>
+              </Link>
             </div>
           )}
         </div>
@@ -237,8 +276,8 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
       {!file ? (
         // Upload Dropzone
         <div
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-          onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+          onDragOver={(e) => { e.preventDefault(); dispatch({ type: 'setIsDragging', isDragging: true }); }}
+          onDragLeave={(e) => { e.preventDefault(); dispatch({ type: 'setIsDragging', isDragging: false }); }}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           className={cn(
@@ -323,12 +362,12 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
                   <div className="font-mono text-xs uppercase tracking-widest text-loom-iron/70 dark:text-muslin/70 mb-3 flex items-center justify-between">
                     <span>AI Model</span>
                     {tier === "free" && (
-                      <a href="/dashboard/billing" className="text-shuttle-red hover:underline ml-2">Upgrade for Precision</a>
+                      <Link href="/dashboard/billing" className="text-shuttle-red hover:underline ml-2">Upgrade for Precision</Link>
                     )}
                   </div>
                   <div className="flex gap-2">
                     <button 
-                      onClick={() => setSelectedModel("standard")}
+                      onClick={() => dispatch({ type: 'setSelectedModel', model: "standard" })}
                       className={cn(
                         "flex-1 font-sans text-xs font-semibold py-2 px-2 text-center border transition-colors",
                         selectedModel === "standard" 
@@ -340,7 +379,7 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
                     </button>
                     <button 
                       disabled={tier === "free"}
-                      onClick={() => setSelectedModel("precision")}
+                      onClick={() => dispatch({ type: 'setSelectedModel', model: "precision" })}
                       title={tier === "free" ? "Requires Student or Professional plan" : ""}
                       className={cn(
                         "flex-1 font-sans text-xs font-semibold py-2 px-2 text-center border transition-colors",

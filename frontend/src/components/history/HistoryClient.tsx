@@ -1,9 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useReducer, useState, useEffect } from "react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+
+type DeleteState = {
+  deleteId: string | null;
+  isDeleting: boolean;
+  deleteError: string | null;
+  partialFailureNote: string | null;
+};
+
+type DeleteAction =
+  | { type: 'startDelete'; id: string }
+  | { type: 'cancelDelete' }
+  | { type: 'submitStarted' }
+  | { type: 'submitFailed'; error: string }
+  | { type: 'submitSucceeded' };
+
+const initialDeleteState: DeleteState = {
+  deleteId: null,
+  isDeleting: false,
+  deleteError: null,
+  partialFailureNote: null,
+};
+
+function deleteReducer(state: DeleteState, action: DeleteAction): DeleteState {
+  switch (action.type) {
+    case 'startDelete':
+      return { ...state, deleteId: action.id, deleteError: null, partialFailureNote: null };
+    case 'cancelDelete':
+      return { ...state, deleteId: null, deleteError: null };
+    case 'submitStarted':
+      return { ...state, isDeleting: true, deleteError: null, partialFailureNote: null };
+    case 'submitFailed':
+      return { ...state, isDeleting: false, deleteError: action.error };
+    case 'submitSucceeded':
+      return { ...state, isDeleting: false, deleteId: null };
+    default:
+      return state;
+  }
+}
 
 type Report = {
   id: string;
@@ -19,17 +57,54 @@ type HistoryClientProps = {
   initialReports: Report[];
 };
 
-export function HistoryClient({ initialReports }: HistoryClientProps) {
-  const [reports, setReports] = useState<Report[]>(initialReports);
-  const [search, setSearch] = useState("");
-  const [confFilter, setConfFilter] = useState<number>(0);
-  const [dateFilter, setDateFilter] = useState<number>(0); // 0=all, 7, 30, 90
-  const [isLoading, setIsLoading] = useState(false);
+type HistoryState = {
+  reports: Report[];
+  search: string;
+  confFilter: number;
+  dateFilter: number;
+  isLoading: boolean;
+};
 
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [partialFailureNote, setPartialFailureNote] = useState<string | null>(null);
+type HistoryAction =
+  | { type: 'setReports'; payload: Report[] }
+  | { type: 'setSearch'; payload: string }
+  | { type: 'setConfFilter'; payload: number }
+  | { type: 'setDateFilter'; payload: number }
+  | { type: 'setLoading'; payload: boolean }
+  | { type: 'removeReport'; payload: string };
+
+function historyReducer(state: HistoryState, action: HistoryAction): HistoryState {
+  switch (action.type) {
+    case 'setReports':
+      return { ...state, reports: action.payload };
+    case 'setSearch':
+      return { ...state, search: action.payload };
+    case 'setConfFilter':
+      return { ...state, confFilter: action.payload };
+    case 'setDateFilter':
+      return { ...state, dateFilter: action.payload };
+    case 'setLoading':
+      return { ...state, isLoading: action.payload };
+    case 'removeReport':
+      return { ...state, reports: state.reports.filter((r) => r.id !== action.payload) };
+    default:
+      return state;
+  }
+}
+
+export function HistoryClient({ initialReports }: HistoryClientProps) {
+  const [state, dispatch] = useReducer(historyReducer, {
+    reports: initialReports,
+    search: "",
+    confFilter: 0,
+    dateFilter: 0,
+    isLoading: false,
+  });
+
+  const { reports, search, confFilter, dateFilter, isLoading } = state;
+
+  const [deleteState, dispatchDelete] = useReducer(deleteReducer, initialDeleteState);
+  const { deleteId, isDeleting, deleteError, partialFailureNote } = deleteState;
 
   const supabase = createClient();
 
@@ -40,7 +115,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
     
     // 400ms debounce for real server-side queries
     const timer = setTimeout(async () => {
-      setIsLoading(true);
+      dispatch({ type: 'setLoading', payload: true });
       try {
         let query = supabase
           .from("reports")
@@ -76,7 +151,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
         if (error) {
           // Handle fetch error in UI state instead of leaking to browser console
         } else if (data) {
-          setReports(data.map((r: any) => ({
+          dispatch({ type: 'setReports', payload: data.map((r: any) => ({
             id: r.id,
             fabric_type: r.fabric_type,
             confidence_score: r.confidence_score,
@@ -84,12 +159,12 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
             ai_suggestions: r.ai_suggestions,
             image_url: r.image_url,
             file_name: undefined // Removed file_name as it's not present on reports
-          })));
+          }))});
         }
       } catch (err) {
         // Suppress leakage to console, query failure handles gracefully
       } finally {
-        if (isActive) setIsLoading(false);
+        if (isActive) dispatch({ type: 'setLoading', payload: false });
       }
     }, 400);
 
@@ -105,9 +180,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
     const reportToDelete = reports.find((r) => r.id === deleteId);
     if (!reportToDelete) return;
 
-    setIsDeleting(true);
-    setDeleteError(null);
-    setPartialFailureNote(null);
+    dispatchDelete({ type: 'submitStarted' });
 
     // 1. SOFT DELETE DB ROW
     const { error: dbError } = await supabase
@@ -116,15 +189,13 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
       .eq("id", deleteId);
 
     if (dbError) {
-      setDeleteError(`Failed to delete report: ${dbError.message}`);
-      setIsDeleting(false);
+      dispatchDelete({ type: 'submitFailed', error: `Failed to delete report: ${dbError.message}` });
       return;
     }
 
     // DB update succeeded. Remove from UI immediately.
-    setReports((prev) => prev.filter((r) => r.id !== deleteId));
-    setDeleteId(null);
-    setIsDeleting(false);
+    dispatch({ type: 'removeReport', payload: deleteId });
+    dispatchDelete({ type: 'submitSucceeded' });
     
     // Note: We deliberately do NOT delete the storage file here per the soft-delete architecture.
   };
@@ -191,7 +262,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
               type="text"
               placeholder="Search fabric type..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => dispatch({ type: 'setSearch', payload: e.target.value })}
               className="bg-white/80 border border-loom-iron/15 px-4 py-2.5 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors"
             />
           </div>
@@ -207,7 +278,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
                 ].map((opt) => (
                   <button
                     key={opt.label}
-                    onClick={() => setConfFilter(opt.value)}
+                    onClick={() => dispatch({ type: 'setConfFilter', payload: opt.value })}
                     className={cn(
                       "px-3 py-1.5 font-sans text-xs font-semibold transition-colors border",
                       confFilter === opt.value 
@@ -232,7 +303,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
                 ].map((opt) => (
                   <button
                     key={opt.label}
-                    onClick={() => setDateFilter(opt.value)}
+                    onClick={() => dispatch({ type: 'setDateFilter', payload: opt.value })}
                     className={cn(
                       "px-3 py-1.5 font-sans text-xs font-semibold transition-colors border",
                       dateFilter === opt.value 
@@ -310,7 +381,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
                     </button>
                     <div className="flex-1"></div>
                     <button
-                      onClick={() => setDeleteId(report.id)}
+                      onClick={() => dispatchDelete({ type: 'startDelete', id: report.id })}
                       className="font-sans text-xs font-medium text-madder hover:bg-madder/10 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
@@ -341,7 +412,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
 
             <div className="flex gap-4">
               <button
-                onClick={() => setDeleteId(null)}
+                onClick={() => dispatchDelete({ type: 'cancelDelete' })}
                 disabled={isDeleting}
                 className="flex-1 px-4 py-2 font-sans font-semibold text-loom-iron border border-loom-iron/20 hover:bg-loom-iron/5 transition-colors disabled:opacity-50"
               >

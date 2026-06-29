@@ -350,6 +350,7 @@ export default function HeroScrollScrub() {
       id="hero"
       ref={containerRef}
       className="relative"
+      data-navbar-theme="dark"
       style={{ height: reducedMotion ? "100vh" : "400vh" }}
     >
       {/* ── Sticky viewport ────────────────────────────────── */}

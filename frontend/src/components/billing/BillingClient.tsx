@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useSearchParams } from "next/navigation";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
@@ -106,76 +107,85 @@ export function BillingClient({ subscription, usage }: { subscription: any; usag
             else if (isEnterprise) variant = "loom-iron";
 
             return (
-              <CutCornerPanel 
-                key={tier.id}
-                variant={variant} 
-                className={cn(
-                  "p-6 shadow-sm flex flex-col relative", 
-                  variant === "shuttle-red" ? "shadow-md transform xl:-translate-y-2 text-muslin" : 
-                  variant === "loom-iron" ? "text-muslin" : "border border-loom-iron/10 text-loom-iron"
-                )}
-              >
-                {isPro && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-muslin text-shuttle-red px-3 py-1 text-xs font-bold uppercase tracking-widest clip-cut-btn whitespace-nowrap z-10 border border-loom-iron/10 shadow-sm">
-                    Most Popular
+              <div key={tier.id} className={cn("w-full h-full flex", isPro ? "xl:-mt-4" : "")}>
+                <CutCornerPanel 
+                  variant={variant} 
+                  className={cn(
+                    "p-8 relative flex flex-col w-full min-h-[500px]", 
+                    variant === "shuttle-red" ? "text-muslin" : 
+                    variant === "loom-iron" ? "text-muslin" : "text-loom-iron",
+                    isCurrent ? "border-4 border-dye-indigo shadow-lg" : ""
+                  )}
+                >
+                  {isPro && !isCurrent && (
+                    <div className="absolute top-4 right-8 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                      Most Popular
+                    </div>
+                  )}
+                  {isStudent && !isCurrent && (
+                    <div className="absolute top-4 right-8 bg-concrete-grey text-muslin font-mono text-xs uppercase tracking-widest px-3 py-1 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                      Self-Certified
+                    </div>
+                  )}
+                  {isCurrent && (
+                    <div className="absolute top-4 right-8 bg-dye-indigo text-muslin font-mono text-xs uppercase tracking-widest px-4 py-1.5 shadow-sm z-10 clip-cut-btn">
+                      Current Plan
+                    </div>
+                  )}
+                  <div className="mb-6 mt-2">
+                    <h3 className={cn("font-display text-2xl uppercase", variant === "shuttle-red" ? "text-muslin" : "")}>{tier.name}</h3>
+                    <div className={cn("mt-2 flex items-baseline gap-2", variant === "shuttle-red" ? "text-muslin" : "")}>
+                      <span className="font-mono text-5xl font-bold tracking-tight">{tier.price}</span>
+                      <span className={cn("font-mono text-xs uppercase tracking-wider", variant === "shuttle-red" || variant === "loom-iron" ? "text-muslin/70" : "text-concrete-grey")}>
+                        {tier.priceNote}
+                      </span>
+                    </div>
                   </div>
-                )}
-                {isStudent && (
-                  <div className="absolute top-0 right-0 bg-concrete-grey text-muslin font-mono text-xs uppercase tracking-widest px-3 py-1 translate-x-2 -translate-y-2 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
-                    Self-Certified
-                  </div>
-                )}
-                <div className="mb-4 mt-2">
-                  <h3 className={cn("font-display text-xl uppercase", variant === "shuttle-red" ? "text-muslin" : "")}>{tier.name}</h3>
-                  <div className={cn("mt-2 flex items-baseline", variant === "shuttle-red" ? "text-muslin" : "")}>
-                    <span className="text-3xl font-display">{tier.price}</span>
-                    <span className={cn("ml-1", variant === "shuttle-red" || variant === "loom-iron" ? "opacity-80" : "text-concrete-grey")}>
-                      {tier.priceNote}
-                    </span>
-                  </div>
-                </div>
-                <div className={cn(
-                  "mb-4 p-3 border clip-cut-tr-md",
-                  variant === "shuttle-red" ? "border-muslin/30 bg-muslin/10" : "border-loom-iron/10 bg-loom-iron/5"
-                )}>
-                  <div className="font-mono text-[10px] uppercase tracking-widest mb-1 opacity-70">Capacity</div>
-                  <div className="font-mono font-bold text-sm">{tier.storageText}</div>
-                </div>
-                <ul className={cn("text-sm space-y-3 mb-8 flex-1", variant === "shuttle-red" ? "text-muslin/90" : variant === "loom-iron" ? "text-muslin/80" : "text-concrete-grey")}>
-                  {tier.features.slice(0, 3).map((f, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>{f.text}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                {isCurrent ? (
-                  <button disabled className={cn(
-                    "w-full py-2.5 font-sans text-sm font-semibold clip-cut-btn cursor-not-allowed mt-auto",
-                    variant === "shuttle-red" ? "bg-muslin/20 text-muslin" : "bg-loom-iron/10 text-loom-iron/50"
+                  <div className={cn(
+                    "mb-6 p-4 border clip-cut-tr-md",
+                    variant === "shuttle-red" ? "border-muslin/30 bg-muslin/10" : "border-loom-iron/10 bg-loom-iron/5"
                   )}>
-                    Current Plan
-                  </button>
-                ) : isEnterprise ? (
-                  <a href="/contact" className={cn(
-                    "w-full text-center block py-2.5 transition-colors font-sans text-sm font-semibold clip-cut-btn mt-auto",
-                    variant === "loom-iron" ? "border-2 border-muslin text-muslin hover:bg-muslin hover:text-loom-iron" : "border-2 border-loom-iron text-loom-iron hover:bg-loom-iron hover:text-muslin"
-                  )}>
-                    Contact Sales
-                  </a>
-                ) : (
-                  <a 
-                    href={tier.id === 'free' ? "/contact" : `/dashboard/billing/checkout?plan=${tier.id}`}
-                    className={cn(
-                      "w-full text-center block py-2.5 transition-colors font-sans text-sm font-semibold clip-cut-btn mt-auto",
-                      variant === "shuttle-red" ? "bg-muslin text-shuttle-red hover:bg-muslin/90" : "bg-loom-iron/10 text-loom-iron hover:bg-loom-iron/20"
-                    )}
-                  >
-                    {tier.id === 'free' ? "Downgrade" : "Upgrade"}
-                  </a>
-                )}
-              </CutCornerPanel>
+                    <div className="font-mono text-xs uppercase tracking-widest mb-1 opacity-70">Capacity</div>
+                    <div className="font-mono font-bold text-sm">{tier.storageText}</div>
+                  </div>
+                  <ul className={cn("text-sm space-y-4 mb-8 flex-1", variant === "shuttle-red" ? "text-muslin/90" : variant === "loom-iron" ? "text-muslin/80" : "text-concrete-grey")}>
+                    {tier.features.map((f, i) => (
+                      <li key={i} className={cn("flex items-start gap-3", !f.included && "opacity-50 line-through")}>
+                        <svg className={cn("w-5 h-5 shrink-0 mt-0.5", variant === "shuttle-red" || variant === "loom-iron" ? "text-muslin" : "text-shuttle-red")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="square" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="font-sans text-sm">{f.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  {isCurrent ? (
+                    <button disabled className={cn(
+                      "w-full py-4 font-sans text-sm font-semibold uppercase tracking-wider clip-cut-btn cursor-not-allowed mt-auto relative z-20",
+                      "bg-dye-indigo text-muslin"
+                    )}>
+                      Current Plan
+                    </button>
+                  ) : isEnterprise ? (
+                    <Link href="/contact" className={cn(
+                      "w-full text-center block py-4 transition-colors font-sans text-sm font-semibold uppercase tracking-wider clip-cut-btn mt-auto relative z-20",
+                      variant === "loom-iron" ? "border-2 border-muslin text-muslin hover:bg-muslin hover:text-loom-iron" : "border-2 border-loom-iron text-loom-iron hover:bg-loom-iron hover:text-muslin"
+                    )}>
+                      Contact Sales
+                    </Link>
+                  ) : (
+                    <a 
+                      href={tier.id === 'free' ? "/contact" : `/dashboard/billing/checkout?plan=${tier.id}`}
+                      className={cn(
+                        "w-full text-center block py-4 transition-colors font-sans text-sm font-semibold uppercase tracking-wider clip-cut-btn mt-auto relative z-20",
+                        variant === "shuttle-red" ? "bg-muslin text-shuttle-red hover:bg-muslin/90" : "bg-loom-iron text-muslin hover:bg-loom-iron/90"
+                      )}
+                    >
+                      {tier.id === 'free' ? "Downgrade" : "Upgrade"}
+                    </a>
+                  )}
+                </CutCornerPanel>
+              </div>
             );
           })}
         </div>

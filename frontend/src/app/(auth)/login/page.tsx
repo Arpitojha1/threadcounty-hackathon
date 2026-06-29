@@ -1,20 +1,59 @@
 "use client";
+import Link from "next/link";
 
-import { useState, Suspense, useEffect } from "react";
+import { useReducer, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { setRememberMeCookie, clearRememberMeCookie } from "@/app/auth/cookie-actions";
+
+type FormState = {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+  loading: boolean;
+  error: string | null;
+};
+
+type FormAction =
+  | { type: 'fieldChanged'; name: keyof Pick<FormState, 'email' | 'password' | 'rememberMe'>; value: any }
+  | { type: 'submitStarted' }
+  | { type: 'submitFailed'; error: string }
+  | { type: 'submitSucceeded' }
+  | { type: 'setError'; error: string };
+
+const initialState: FormState = {
+  email: '',
+  password: '',
+  rememberMe: true,
+  loading: false,
+  error: null,
+};
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case 'fieldChanged':
+      return { ...state, [action.name]: action.value };
+    case 'submitStarted':
+      return { ...state, loading: true, error: null };
+    case 'submitFailed':
+      return { ...state, loading: false, error: action.error };
+    case 'submitSucceeded':
+      return { ...state, loading: false };
+    case 'setError':
+      return { ...state, error: action.error };
+    default:
+      return state;
+  }
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(formReducer, initialState);
+  const { email, password, rememberMe, loading, error } = state;
 
   // Read URL params for messages
   const urlError = searchParams.get("error");
@@ -22,24 +61,18 @@ function LoginForm() {
 
   useEffect(() => {
     if (urlError === "verification_failed") {
-      setError("Email verification failed or link expired. Please try signing up again.");
+      dispatch({ type: 'setError', error: "Email verification failed or link expired. Please try signing up again." });
     }
   }, [urlError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    dispatch({ type: 'submitStarted' });
 
     const supabase = createClient();
 
     // Set cookie BEFORE sign-in so that the Supabase client catches it
-    // during the internal set() call for the auth token.
-    if (rememberMe) {
-      document.cookie = "threadcounty_session_only=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    } else {
-      document.cookie = "threadcounty_session_only=true; path=/;";
-    }
+    await setRememberMeCookie(rememberMe);
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
@@ -47,16 +80,14 @@ function LoginForm() {
     });
 
     if (signInError) {
-      setLoading(false);
-      // Clean up the cookie if sign-in failed just in case
-      document.cookie = "threadcounty_session_only=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      await clearRememberMeCookie();
       const msg = signInError.message.toLowerCase();
       if (msg.includes("invalid login credentials")) {
-        setError("Wrong email or password. Please try again.");
+        dispatch({ type: 'submitFailed', error: "Wrong email or password. Please try again." });
       } else if (msg.includes("not confirmed") || msg.includes("email")) {
-        setError("Your email has not been verified yet. Please check your inbox for the verification link.");
+        dispatch({ type: 'submitFailed', error: "Your email has not been verified yet. Please check your inbox for the verification link." });
       } else {
-        setError(signInError.message);
+        dispatch({ type: 'submitFailed', error: signInError.message });
       }
       return;
     }
@@ -99,7 +130,7 @@ function LoginForm() {
             type="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => dispatch({ type: 'fieldChanged', name: 'email', value: e.target.value })}
             className="bg-white/80 border border-loom-iron/15 px-4 py-3 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors"
           />
         </div>
@@ -112,19 +143,19 @@ function LoginForm() {
             >
               Password
             </label>
-            <a
+            <Link
               href="/forgot-password"
               className="font-sans text-xs text-shuttle-red hover:underline"
             >
               Forgot your password?
-            </a>
+            </Link>
           </div>
           <input
             id="password"
             type="password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => dispatch({ type: 'fieldChanged', name: 'password', value: e.target.value })}
             className="bg-white/80 border border-loom-iron/15 px-4 py-3 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors"
           />
         </div>
@@ -134,7 +165,7 @@ function LoginForm() {
             id="remember-me"
             type="checkbox"
             checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
+            onChange={(e) => dispatch({ type: 'fieldChanged', name: 'rememberMe', value: e.target.checked })}
             className="w-4 h-4 accent-shuttle-red"
           />
           <label
@@ -159,9 +190,9 @@ function LoginForm() {
 
       <div className="mt-8 text-center font-sans text-sm text-loom-iron/70">
         Don&apos;t have an account?{" "}
-        <a href="/signup" className="text-shuttle-red hover:underline">
+        <Link href="/signup" className="text-shuttle-red hover:underline">
           Create one
-        </a>
+        </Link>
       </div>
     </CutCornerPanel>
   );
