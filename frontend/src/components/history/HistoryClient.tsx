@@ -433,7 +433,8 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
               </div>
             </CutCornerPanel>
           </div>
-      )}
         </div>
-      );
+      )}
+    </div>
+  );
 }
