@@ -4,6 +4,7 @@ import { useReducer, useEffect } from "react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 type ProfileState = {
@@ -69,7 +70,7 @@ export function ProfileClient() {
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) return;
-    
+
     dispatch({ type: 'passUpdateStarted' });
 
     const { error } = await supabase.auth.updateUser({
@@ -94,7 +95,7 @@ export function ProfileClient() {
 
     dispatch({ type: 'deleteStarted' });
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (user) {
       // Soft delete: mark profile with deleted_at
       await supabase
@@ -124,7 +125,7 @@ export function ProfileClient() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
+
         {/* Left Column: Avatar & Basic Info */}
         <div className="md:col-span-1 space-y-6">
           <CutCornerPanel variant="muslin" bordered size="sm" className="p-8 flex flex-col items-center text-center">
@@ -138,11 +139,23 @@ export function ProfileClient() {
 
         {/* Right Column: Forms */}
         <div className="md:col-span-2 space-y-8">
-          
+
+          {isAdmin && (
+            <CutCornerPanel variant="muslin" bordered size="sm" className="p-8">
+              <h2 className="font-display text-2xl uppercase text-loom-iron dark:text-muslin mb-2">Administration</h2>
+              <p className="font-sans text-sm text-loom-iron/70 dark:text-muslin/70 mb-6 max-w-md">
+                You have administrative access to platform statistics and user management.
+              </p>
+              <Link href="/dashboard/admin" className="clip-cut-btn bg-loom-iron dark:bg-muslin text-muslin dark:text-loom-iron px-6 py-3 font-sans font-semibold inline-block transition-opacity hover:opacity-90">
+                Open Admin Dashboard
+              </Link>
+            </CutCornerPanel>
+          )}
+
           {/* Security Panel */}
           <CutCornerPanel variant="muslin" bordered size="sm" className="p-8">
             <h2 className="font-display text-2xl uppercase text-loom-iron dark:text-muslin mb-6">Security</h2>
-            
+
             <form onSubmit={handleUpdatePassword} className="space-y-6">
               {passMessage && (
                 <div className={cn(
@@ -187,7 +200,7 @@ export function ProfileClient() {
             <p className="font-sans text-sm text-loom-iron/70 dark:text-muslin/70 mb-6 max-w-md">
               Requesting account deletion will mark your profile for removal and log you out immediately. Your authentication record will remain until manually purged by support.
             </p>
-            
+
             <button
               onClick={handleRequestDeletion}
               disabled={deleteLoading}

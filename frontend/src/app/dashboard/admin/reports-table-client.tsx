@@ -225,20 +225,22 @@ export function ReportsTableClient({ initialReports }: { initialReports: Report[
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
           onClick={() => setExpandedImageUrl(null)}
         >
-          <div className="relative max-w-5xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            <button 
-              className="absolute top-4 right-4 p-2 bg-muslin/10 hover:bg-muslin/20 text-muslin transition-colors backdrop-blur-md"
-              onClick={() => setExpandedImageUrl(null)}
-              title="Close"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <img 
-              src={expandedImageUrl} 
-              alt="Expanded view" 
-              className="max-w-full max-h-full object-contain border border-muslin/20 shadow-2xl"
-              onClick={(e) => e.stopPropagation()} 
-            />
+          <div className="w-full h-full">
+            <div className="relative max-w-5xl max-h-[90vh] w-full h-full mx-auto flex items-center justify-center">
+              <button 
+                className="absolute top-4 right-4 p-2 bg-muslin/10 hover:bg-muslin/20 text-muslin transition-colors backdrop-blur-md"
+                onClick={() => setExpandedImageUrl(null)}
+                title="Close"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <img 
+                src={expandedImageUrl} 
+                alt="Expanded view" 
+                className="max-w-full max-h-full object-contain border border-muslin/20 shadow-2xl"
+                onClick={(e) => e.stopPropagation()} 
+              />
+            </div>
           </div>
         </div>
       )}

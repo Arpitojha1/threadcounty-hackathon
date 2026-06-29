@@ -64,7 +64,7 @@ export default function Workflow() {
         className={
           isReduced
             ? "py-24 relative z-10 mx-auto max-w-7xl px-6"
-            : "sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-center py-20 relative z-10 mx-auto max-w-7xl px-6"
+            : "sticky top-0 min-h-screen w-full flex flex-col justify-center py-20 relative z-10 mx-auto max-w-7xl px-6"
         }
       >
         <WeaveGrid opacity={0.04} color="muslin" density="normal" />
@@ -88,7 +88,7 @@ export default function Workflow() {
             return (
               <motion.div 
                 key={step.number} 
-                className="relative"
+                className="relative h-full"
                 style={transforms}
                 initial={isReduced ? { opacity: 0, y: 30 } : undefined}
                 whileInView={isReduced ? { opacity: 1, y: 0 } : undefined}
@@ -105,7 +105,7 @@ export default function Workflow() {
                     corner="tr"
                     size="lg"
                     variant={cardVariants[i]}
-                    className="p-8 h-full flex flex-col shadow-2xl transition-all duration-300 hover:border-shuttle-red"
+                    className="p-12 h-full flex flex-col shadow-2xl transition-all duration-300 hover:border-shuttle-red"
                   >
                     {/* Step number */}
                     <span className="font-mono text-sm tracking-widest opacity-60 mb-4">

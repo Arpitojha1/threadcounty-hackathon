@@ -40,8 +40,10 @@ export default function AuthLayout({
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md">
-        {children}
+      <div className="relative z-10 w-full">
+        <div className="w-full max-w-md mx-auto">
+          {children}
+        </div>
       </div>
 
       {/* Bottom Footer */}

@@ -15,6 +15,7 @@ type NavbarClientProps = {
 
 const LOGGED_OUT_LINKS = [
   { label: "Home", href: "/" },
+  { label: "Features", href: "/#workflow" },
   { label: "Pricing", href: "/pricing" }
 ];
 
@@ -30,6 +31,11 @@ export function NavbarClient({ userEmail }: NavbarClientProps) {
   const prefersReducedMotion = useReducedMotion();
   const pathname = usePathname();
   const { scrollY } = useScroll();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 10);
+  });
 
   /* Sync initial state from <html> class on mount */
   useEffect(() => {
@@ -46,119 +52,17 @@ export function NavbarClient({ userEmail }: NavbarClientProps) {
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const isLoggedIn = !!userEmail;
-
-  // Track overlap with dark sections
-  const [sections, setSections] = useState<{ top: number; bottom: number }[]>([]);
-  const darkProgress = useMotionValue(0);
-
-  // Update section positions on mount, resize, and DOM changes
-  useEffect(() => {
-    const updateSections = () => {
-      const els = document.querySelectorAll('[data-navbar-theme="dark"]');
-      const newSections = Array.from(els).map((el) => {
-        const rect = el.getBoundingClientRect();
-        const absoluteTop = rect.top + window.scrollY;
-        return {
-          top: absoluteTop,
-          bottom: absoluteTop + rect.height,
-        };
-      });
-      setSections(newSections);
-    };
-
-    updateSections();
-    const t1 = setTimeout(updateSections, 100);
-    const t2 = setTimeout(updateSections, 1000);
-
-    window.addEventListener("resize", updateSections);
-    
-    let observer: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(updateSections);
-      observer.observe(document.body);
-    }
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      window.removeEventListener("resize", updateSections);
-      observer?.disconnect();
-    };
-  }, [pathname]); // Also re-measure when navigating
-
-  useMotionValueEvent(scrollY, "change", (y) => {
-    // If global dark mode is forced on, we lock progress to 1
-    if (document.documentElement.classList.contains("dark")) {
-      darkProgress.set(1);
-      return;
-    }
-
-    const navbarHeight = 64; // standard h-16
-    const navbarTop = y;
-    const navbarBottom = y + navbarHeight;
-
-    let totalOverlap = 0;
-
-    for (const sec of sections) {
-      if (sec.bottom > navbarTop && sec.top < navbarBottom) {
-        const overlap = Math.min(navbarBottom, sec.bottom) - Math.max(navbarTop, sec.top);
-        totalOverlap += overlap;
-      }
-    }
-
-    // Resolves to 0 in gap zones where totalOverlap = 0
-    let progress = Math.min(1, Math.max(0, totalOverlap / navbarHeight));
-    
-    // Snap immediately if reduced motion
-    if (prefersReducedMotion) {
-      progress = Math.round(progress);
-    }
-    
-    darkProgress.set(progress);
-  });
-
-  // Re-trigger calculation when global dark mode changes
-  useEffect(() => {
-    if (dark) {
-      darkProgress.set(1);
-    } else {
-      // Force re-evaluation of scroll position
-      scrollY.set(scrollY.get());
-    }
-  }, [dark, darkProgress, scrollY]);
-
-  const smoothedProgress = useSpring(darkProgress, { stiffness: 300, damping: 30 });
-  const finalProgress = prefersReducedMotion ? darkProgress : smoothedProgress;
-
-  /*
-   * Color Interpolations (0 = Light Section, 1 = Dark Section)
-   * Light (muslin behind): Text = loom-iron (#161512), Bg = loom-iron-tinted (rgba(22, 21, 18, 0.05)), Border = rgba(22, 21, 18, 0.1)
-   * Dark (loom-iron behind): Text = muslin (#F2EDE4), Bg = muslin-tinted (rgba(242, 237, 228, 0.12)), Border = rgba(242, 237, 228, 0.1)
-   */
-  const textColor = useTransform(finalProgress, [0, 1], ["#161512", "#F2EDE4"]);
-  const backgroundColor = useTransform(finalProgress, [0, 1], ["rgba(22, 21, 18, 0.05)", "rgba(242, 237, 228, 0.12)"]);
-  const borderColor = useTransform(finalProgress, [0, 1], ["rgba(22, 21, 18, 0.1)", "rgba(242, 237, 228, 0.1)"]);
-
-  const [isDarkThemed, setIsDarkThemed] = useState(false);
-  useMotionValueEvent(darkProgress, "change", (v) => {
-    setIsDarkThemed(v > 0.5);
-  });
-
-  // If mobile drawer is open, we force the navbar's own background to be fully opaque so it matches the drawer
-  // This prevents the transparent blur from looking weird above a solid dropdown
-  const effectiveBgColor = mobileOpen 
-    ? (isDarkThemed ? "#161512" : "#F2EDE4") 
-    : backgroundColor;
+  const showSolid = pathname !== "/" || isScrolled;
+  const textColor = showSolid ? "text-loom-iron dark:text-muslin" : "text-muslin";
+  const isDarkThemed = dark;
 
   return (
-    <motion.nav
-      className="fixed inset-x-0 top-0 z-50 transition-[height,max-height] duration-300 backdrop-blur-md"
-      style={{ 
-        color: textColor,
-        backgroundColor: effectiveBgColor,
-        borderBottomWidth: "1px",
-        borderBottomColor: borderColor
-      }}
+    <nav
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        showSolid ? "bg-muslin dark:bg-loom-iron shadow-sm border-b border-loom-iron/5 dark:border-muslin/5" : "bg-transparent",
+        textColor
+      )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* ── Logo ─────────────────────────────────────── */}
@@ -287,7 +191,7 @@ export function NavbarClient({ userEmail }: NavbarClientProps) {
             </>
           ) : (
             /* Logged in Actions */
-            <motion.div className="hidden md:flex items-center gap-4 ml-2 border-l pl-4" style={{ borderLeftColor: borderColor }}>
+            <motion.div className="hidden md:flex items-center gap-4 ml-2 border-l border-loom-iron/20 dark:border-muslin/20 pl-4">
               <span className="font-mono text-xs tracking-wider truncate max-w-[150px] opacity-70">
                 {userEmail}
               </span>
@@ -454,6 +358,6 @@ export function NavbarClient({ userEmail }: NavbarClientProps) {
           )}
         </ul>
       </div>
-    </motion.nav>
+    </nav>
   );
 }
