@@ -77,7 +77,7 @@ export default function AboutPage() {
         </section>
 
         {/* Team Section */}
-        <section className="bg-loom-iron -mx-6 px-6 py-24 sm:px-12 sm:py-32">
+        <section className="bg-loom-iron -mx-6 px-6 py-24 sm:px-12 sm:py-32" data-navbar-theme="dark">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
             <div>
               <h2 className="font-display text-4xl uppercase text-muslin mb-6">The Team</h2>

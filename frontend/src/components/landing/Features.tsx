@@ -83,7 +83,7 @@ export default function Features() {
                     "font-mono text-xs tracking-widest",
                     feature.highlight
                       ? "text-muslin/50"
-                      : "text-muslin/40 dark:text-muslin/40"
+                      : "text-muslin/50 dark:text-loom-iron/50"
                   )}
                 >
                   {feature.number}
@@ -95,7 +95,7 @@ export default function Features() {
                     "font-display text-xl uppercase md:text-2xl",
                     feature.highlight
                       ? "text-muslin"
-                      : "text-muslin dark:text-muslin"
+                      : "text-muslin dark:text-loom-iron"
                   )}
                 >
                   {feature.title}
@@ -107,7 +107,7 @@ export default function Features() {
                     "mt-auto font-sans text-sm leading-relaxed",
                     feature.highlight
                       ? "text-muslin/80"
-                      : "text-muslin/60 dark:text-muslin/60"
+                      : "text-muslin/80 dark:text-loom-iron/80"
                   )}
                 >
                   {feature.description}

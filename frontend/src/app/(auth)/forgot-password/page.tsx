@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useState } from "react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
@@ -44,12 +45,12 @@ export default function ForgotPasswordPage() {
         <p className="font-mono text-xs text-concrete-grey mt-4 mb-8">
           The link will expire in 24 hours.
         </p>
-        <a
+        <Link
           href="/login"
           className="font-sans text-sm font-semibold text-shuttle-red hover:underline"
         >
           Back to sign in
-        </a>
+        </Link>
       </CutCornerPanel>
     );
   }
@@ -101,9 +102,9 @@ export default function ForgotPasswordPage() {
 
       <div className="mt-8 text-center font-sans text-sm text-loom-iron/70">
         Remember your password?{" "}
-        <a href="/login" className="text-shuttle-red hover:underline">
+        <Link href="/login" className="text-shuttle-red hover:underline">
           Sign in
-        </a>
+        </Link>
       </div>
     </CutCornerPanel>
   );

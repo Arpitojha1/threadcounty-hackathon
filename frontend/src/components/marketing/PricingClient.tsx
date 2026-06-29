@@ -73,7 +73,7 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
         </p>
       </div>
 
-      {/* 4-Column Asymmetrical Grid */}
+      {/* Pricing Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
         {PRICING_TIERS.map((tier) => {
           const isCurrent = currentTier === tier.id;
@@ -91,25 +91,26 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
                 variant={variant}
                 size="lg"
                 className={cn(
-                  "p-8 relative flex flex-col w-full min-h-[600px]",
-                  variant === "loom-iron" ? "text-muslin" : variant === "shuttle-red" ? "text-muslin" : "text-loom-iron"
+                  "p-8 relative flex flex-col w-full min-h-[500px]",
+                  variant === "loom-iron" ? "text-muslin" : variant === "shuttle-red" ? "text-muslin" : "text-loom-iron",
+                  isCurrent ? "border-4 border-dye-indigo shadow-lg" : ""
                 )}
               >
                 {/* Badges */}
-                {isPro && (
-                  <div className="absolute top-0 right-0 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 translate-x-2 -translate-y-2 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                {isPro && !isCurrent && (
+                  <div className="absolute top-4 right-8 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
                     Most Popular
                   </div>
                 )}
                 
-                {isStudent && (
-                  <div className="absolute top-0 right-0 bg-concrete-grey text-muslin font-mono text-xs uppercase tracking-widest px-3 py-1 translate-x-2 -translate-y-2 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                {isStudent && !isCurrent && (
+                  <div className="absolute top-4 right-8 bg-concrete-grey text-muslin font-mono text-xs uppercase tracking-widest px-3 py-1 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
                     Self-Certified
                   </div>
                 )}
 
                 {isCurrent && (
-                  <div className="absolute top-0 left-0 bg-dye-indigo text-muslin font-mono text-xs uppercase tracking-widest px-3 py-1 -translate-x-2 -translate-y-2 shadow-sm z-10 clip-cut-btn">
+                  <div className="absolute top-4 right-8 bg-dye-indigo text-muslin font-mono text-xs uppercase tracking-widest px-4 py-1.5 shadow-sm z-10 clip-cut-btn">
                     Current Plan
                   </div>
                 )}
@@ -152,7 +153,7 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
 
                 {/* Self-certification checkbox for Student tier */}
                 {isStudent && (
-                  <label className="flex items-start gap-3 mb-6 cursor-pointer group">
+                  <label className="flex items-start gap-3 mb-6 cursor-pointer group relative z-20">
                     <div className="relative flex items-center justify-center w-5 h-5 shrink-0 mt-0.5 border-2 border-loom-iron/30 group-hover:border-shuttle-red transition-colors bg-white">
                       <input 
                         type="checkbox" 
@@ -174,7 +175,7 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
                 {isPro && (
                   <div className="mb-6 p-4 border border-muslin/30 bg-muslin/5">
                     <div className="font-mono text-xs uppercase tracking-widest text-muslin/70 mb-3">Model Select Preview</div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 relative z-20">
                       <button className="flex-1 bg-muslin text-shuttle-red font-sans text-xs font-semibold py-2 px-2 text-center border border-transparent">
                         Standard Vision
                       </button>
@@ -189,8 +190,8 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
                   onClick={() => handleSubscribe(tier.id)}
                   disabled={isCurrent}
                   className={cn(
-                    "w-full clip-cut-btn py-4 font-sans font-semibold uppercase tracking-wider text-sm transition-opacity hover:opacity-90 mt-auto",
-                    isCurrent ? "bg-loom-iron/20 text-loom-iron/50 cursor-not-allowed" : 
+                    "w-full clip-cut-btn py-4 font-sans font-semibold uppercase tracking-wider text-sm transition-opacity hover:opacity-90 mt-auto relative z-20",
+                    isCurrent ? "bg-dye-indigo text-muslin cursor-not-allowed" : 
                     variant === "shuttle-red" ? "bg-muslin text-shuttle-red" :
                     variant === "loom-iron" ? "bg-shuttle-red text-muslin border-none" :
                     "bg-loom-iron text-muslin",

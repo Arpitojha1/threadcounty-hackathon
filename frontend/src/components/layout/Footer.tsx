@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import TextPressure from "@/components/TextPressure";
 
 export async function Footer() {
   const supabase = await createClient();
@@ -7,13 +8,23 @@ export async function Footer() {
   const isLoggedIn = !!user;
 
   return (
-    <footer className="w-full bg-loom-iron text-muslin px-6 md:px-12 py-16 md:py-24">
+    <footer className="w-full bg-loom-iron text-muslin px-6 md:px-12 py-16 md:py-24" data-navbar-theme="dark">
       <div className="max-w-7xl mx-auto flex flex-col gap-16 md:gap-24">
         
         {/* Top Section */}
         <div className="flex flex-col gap-6">
-          <div className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl tracking-tight uppercase">
-            THREADCOUNTY
+          <div className="w-full relative h-[60px] sm:h-[80px] md:h-[100px] lg:h-[120px] xl:h-[140px] font-display">
+            <TextPressure
+              text="THREADCOUNTY"
+              flex={true}
+              alpha={false}
+              stroke={false}
+              width={true}
+              weight={true}
+              italic={false}
+              textColor="#F2EDE4"
+              minFontSize={36}
+            />
           </div>
           <p className="font-sans text-sm md:text-base text-muslin/70">
             AI-powered fabric analysis.
@@ -44,7 +55,7 @@ export async function Footer() {
         {/* Bottom Row */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-8 md:pt-16 mt-auto">
           <div className="flex flex-col md:flex-row gap-2 md:gap-4 font-mono text-[10px] md:text-xs text-muslin/40 tracking-widest">
-            <span>&copy; ThreadCounty {new Date().getFullYear()}</span>
+            <span suppressHydrationWarning>&copy; ThreadCounty {new Date().getFullYear()}</span>
             <span className="hidden md:inline">&middot;</span>
             <span>All rights reserved.</span>
           </div>

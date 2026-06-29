@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { redirect } from "next/navigation";
-import { UsersTableClient } from "./users-table-client";
-import { ReportsTableClient } from "./reports-table-client";
+import dynamic from "next/dynamic";
+const UsersTableClient = dynamic(() => import("./users-table-client").then(m => m.UsersTableClient));
+const ReportsTableClient = dynamic(() => import("./reports-table-client").then(m => m.ReportsTableClient));
 
 export default async function AdminDashboardPage() {
   // EXPLICIT CHECK: Using the session-aware server client, not the anon-key client.
@@ -105,7 +106,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <h1 className="font-display text-4xl uppercase text-muslin tracking-wide mb-2">
+        <h1 className="font-display text-4xl uppercase text-loom-iron dark:text-muslin tracking-wide mb-2">
           Admin Dashboard
         </h1>
         <p className="font-sans text-sm text-concrete-grey">
@@ -116,7 +117,7 @@ export default async function AdminDashboardPage() {
       {hasError ? (
         <CutCornerPanel variant="shuttle-red" size="sm" bordered className="p-6">
           <h3 className="font-mono text-xs uppercase tracking-widest text-shuttle-red mb-2">Error Loading Data</h3>
-          <p className="font-sans text-sm text-muslin">
+          <p className="font-sans text-sm text-loom-iron dark:text-muslin">
             There was a problem accessing the administration data. Please check if your account has the correct permissions.
           </p>
           <pre className="mt-4 p-4 bg-black/50 text-xs font-mono text-concrete-grey overflow-auto rounded">
@@ -135,27 +136,27 @@ export default async function AdminDashboardPage() {
             
             <CutCornerPanel variant="muslin" size="sm" bordered className="p-6 md:col-span-1">
               <h3 className="font-mono text-xs uppercase tracking-widest text-concrete-grey mb-2">Total Users</h3>
-              <p className="font-display text-4xl text-loom-iron">{totalUsers || 0}</p>
+              <p className="font-display text-4xl text-loom-iron dark:text-muslin">{totalUsers || 0}</p>
             </CutCornerPanel>
 
             <CutCornerPanel variant="muslin" size="sm" bordered className="p-6 md:col-span-1">
               <h3 className="font-mono text-xs uppercase tracking-widest text-concrete-grey mb-2">Storage Used</h3>
-              <p className="font-display text-4xl text-loom-iron">{formatBytes(totalBytes)}</p>
+              <p className="font-display text-4xl text-loom-iron dark:text-muslin">{formatBytes(totalBytes)}</p>
             </CutCornerPanel>
 
             <CutCornerPanel variant="muslin" size="sm" bordered className="p-6 md:col-span-2 flex flex-col justify-between">
               <div>
                 <h3 className="font-mono text-xs uppercase tracking-widest text-concrete-grey mb-2">Report Health</h3>
-                <p className="font-display text-5xl text-loom-iron">{totalReports}</p>
+                <p className="font-display text-5xl text-loom-iron dark:text-muslin">{totalReports}</p>
                 <p className="font-sans text-sm text-concrete-grey mt-1">Total Reports Analyzed</p>
               </div>
-              <div className="flex gap-6 mt-6 border-t border-muslin/10 pt-4">
+              <div className="flex gap-6 mt-6 border-t border-loom-iron/10 dark:border-muslin/10 pt-4">
                 <div>
-                  <p className="font-mono text-xl text-loom-iron">{activeReports}</p>
+                  <p className="font-mono text-xl text-loom-iron dark:text-muslin">{activeReports}</p>
                   <p className="font-sans text-xs text-concrete-grey uppercase tracking-wider">Active</p>
                 </div>
                 <div>
-                  <p className="font-mono text-xl text-loom-iron">{deletedReports}</p>
+                  <p className="font-mono text-xl text-loom-iron dark:text-muslin">{deletedReports}</p>
                   <p className="font-sans text-xs text-concrete-grey uppercase tracking-wider">Soft-Deleted</p>
                 </div>
                 <div className="ml-auto text-right">
@@ -169,19 +170,19 @@ export default async function AdminDashboardPage() {
               <h3 className="font-mono text-xs uppercase tracking-widest text-concrete-grey mb-4">Tier Distribution</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="font-display text-3xl text-loom-iron">{tierCounts.free}</p>
+                  <p className="font-display text-3xl text-loom-iron dark:text-muslin">{tierCounts.free}</p>
                   <p className="font-mono text-[10px] text-concrete-grey uppercase mt-1">Free</p>
                 </div>
                 <div>
-                  <p className="font-display text-3xl text-loom-iron">{tierCounts.student}</p>
+                  <p className="font-display text-3xl text-loom-iron dark:text-muslin">{tierCounts.student}</p>
                   <p className="font-mono text-[10px] text-concrete-grey uppercase mt-1">Student</p>
                 </div>
                 <div>
-                  <p className="font-display text-3xl text-loom-iron">{tierCounts.professional}</p>
+                  <p className="font-display text-3xl text-loom-iron dark:text-muslin">{tierCounts.professional}</p>
                   <p className="font-mono text-[10px] text-concrete-grey uppercase mt-1">Pro</p>
                 </div>
                 <div>
-                  <p className="font-display text-3xl text-loom-iron">{tierCounts.enterprise}</p>
+                  <p className="font-display text-3xl text-loom-iron dark:text-muslin">{tierCounts.enterprise}</p>
                   <p className="font-mono text-[10px] text-concrete-grey uppercase mt-1">Enterprise</p>
                 </div>
               </div>
@@ -190,7 +191,7 @@ export default async function AdminDashboardPage() {
 
           {/* Users List */}
           <div className="mt-8">
-            <h2 className="font-display text-xl uppercase text-muslin tracking-wide mb-4 border-b border-muslin/10 pb-2">
+            <h2 className="font-display text-xl uppercase text-loom-iron dark:text-muslin tracking-wide mb-4 border-b border-loom-iron/10 dark:border-muslin/10 pb-2">
               Registered Users
             </h2>
             
@@ -199,7 +200,7 @@ export default async function AdminDashboardPage() {
 
           {/* Reports List */}
           <div className="mt-12">
-            <h2 className="font-display text-xl uppercase text-muslin tracking-wide mb-4 border-b border-muslin/10 pb-2">
+            <h2 className="font-display text-xl uppercase text-loom-iron dark:text-muslin tracking-wide mb-4 border-b border-loom-iron/10 dark:border-muslin/10 pb-2">
               System Reports
             </h2>
             

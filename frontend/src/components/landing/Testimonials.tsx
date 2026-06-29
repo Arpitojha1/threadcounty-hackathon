@@ -1,34 +1,37 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
-import { TESTIMONIALS } from "@/data/landing";
-
-const container = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.12 },
-  },
-};
-
-const cardMotion = {
-  hidden: { opacity: 0, y: 32 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const },
-  },
-};
+import { mockTestimonials } from "@/lib/mockTestimonials";
+import { cn } from "@/lib/utils";
 
 export default function Testimonials() {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  // Sharp, fast, confident easing per SKILL.md
+  const transition = shouldReduceMotion
+    ? { duration: 0 }
+    : { duration: 0.4, ease: [0.25, 1, 0.5, 1] as const };
+
   return (
     <section
       id="testimonials"
-      className="bg-muslin dark:bg-[#1E1C18] py-24"
+      className="bg-muslin dark:bg-[#1E1C18] py-24 overflow-hidden"
     >
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-7xl px-6 relative">
+        {/* Invisible overlay to close when clicking outside */}
+        {expandedId !== null && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setExpandedId(null)}
+            aria-label="Close expanded testimonial"
+          />
+        )}
+
         {/* Section header */}
-        <div className="mb-16">
+        <div className="mb-16 relative z-10">
           <p className="font-mono text-xs text-shuttle-red tracking-widest mb-3">
             TRUSTED BY
           </p>
@@ -37,75 +40,103 @@ export default function Testimonials() {
           </h2>
         </div>
 
-        {/* Asymmetric grid */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-12 gap-6"
-          variants={container}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          {/* Card 1 — takes 2/3 on desktop */}
-          <motion.div className="md:col-span-8" variants={cardMotion}>
-            <TestimonialCard testimonial={TESTIMONIALS[0]} />
-          </motion.div>
+        {/* Grid Container */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-40">
+          {mockTestimonials.map((testimonial, index) => {
+            const isExpanded = expandedId === testimonial.id;
+            const isOtherExpanded = expandedId !== null && !isExpanded;
 
-          {/* Cards 2 & 3 — stack in remaining 1/3 */}
-          <div className="md:col-span-4 flex flex-col gap-6">
-            <motion.div variants={cardMotion}>
-              <TestimonialCard testimonial={TESTIMONIALS[1]} />
-            </motion.div>
-            <motion.div variants={cardMotion}>
-              <TestimonialCard testimonial={TESTIMONIALS[2]} />
-            </motion.div>
-          </div>
-        </motion.div>
+            // Alternate default backgrounds for asymmetric stat-block look
+            const defaultVariant = index % 3 === 0 ? "concrete-grey" : "muslin";
+            const variant = isExpanded ? "shuttle-red" : defaultVariant;
+
+            return (
+              <div key={testimonial.id} className="relative w-full h-[280px]">
+                <motion.div
+                  layout
+                  initial={false}
+                  onClick={() => setExpandedId(isExpanded ? null : testimonial.id)}
+                  animate={{
+                    scale: isOtherExpanded ? 0.95 : 1,
+                    opacity: isOtherExpanded ? 0.6 : 1,
+                  }}
+                  transition={transition}
+                  className={cn(
+                    "cursor-pointer origin-center transition-shadow",
+                    isExpanded ? "absolute z-50 shadow-2xl" : "absolute z-10"
+                  )}
+                  style={
+                    isExpanded
+                      ? {
+                          width: "calc(100% + 32px)",
+                          height: "calc(100% + 48px)",
+                          top: "-24px",
+                          left: "-16px",
+                        }
+                      : {
+                          width: "100%",
+                          height: "100%",
+                          top: "0px",
+                          left: "0px",
+                        }
+                  }
+                >
+                  <CutCornerPanel
+                    corner="tr"
+                    size={isExpanded ? "lg" : "md"}
+                    variant={variant}
+                    bordered
+                    className="p-8 h-full flex flex-col transition-colors duration-300"
+                  >
+                    {/* Quotation mark */}
+                    <span
+                      className={cn(
+                        "font-display text-5xl leading-none select-none mb-2 transition-colors",
+                        isExpanded ? "opacity-50" : "text-shuttle-red"
+                      )}
+                      aria-hidden="true"
+                    >
+                      &ldquo;
+                    </span>
+
+                    {/* Quote */}
+                    <motion.p
+                      layout="position"
+                      transition={transition}
+                      className={cn(
+                        "font-sans italic text-lg leading-relaxed mb-6 flex-1 transition-all overflow-hidden",
+                        isExpanded ? "line-clamp-none" : "line-clamp-3"
+                      )}
+                    >
+                      {testimonial.quote}
+                    </motion.p>
+
+                    {/* Attribution */}
+                    <motion.div layout="position" transition={transition} className="mt-auto">
+                      <p
+                        className={cn(
+                          "font-mono tracking-widest transition-all",
+                          isExpanded ? "text-base font-bold" : "text-xs font-semibold"
+                        )}
+                      >
+                        {testimonial.name}
+                      </p>
+                      <p
+                        className={cn(
+                          "font-mono tracking-wider mt-1 transition-all opacity-80",
+                          isExpanded ? "text-sm" : "text-xs"
+                        )}
+                      >
+                        {testimonial.role}
+                      </p>
+                    </motion.div>
+                  </CutCornerPanel>
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
-  );
-}
-
-function TestimonialCard({
-  testimonial,
-}: {
-  testimonial: (typeof TESTIMONIALS)[number];
-}) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="h-full"
-    >
-      <CutCornerPanel
-        corner="tr"
-        size="md"
-        variant="loom-iron"
-        bordered
-        className="p-8 h-full flex flex-col"
-      >
-        {/* Quotation mark */}
-        <span
-        className="font-display text-5xl leading-none text-shuttle-red select-none mb-2"
-        aria-hidden="true"
-      >
-        &ldquo;
-      </span>
-
-      {/* Quote */}
-      <p className="font-sans italic text-lg text-muslin leading-relaxed mb-8 flex-1">
-        {testimonial.quote}
-      </p>
-
-      {/* Attribution */}
-      <div>
-        <p className="font-sans font-semibold text-muslin">
-          {testimonial.name}
-        </p>
-        <p className="font-mono text-xs tracking-wider text-concrete-grey mt-1">
-          {testimonial.role} · {testimonial.company}
-        </p>
-      </div>
-    </CutCornerPanel>
-  </motion.div>
   );
 }

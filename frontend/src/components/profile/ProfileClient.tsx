@@ -1,20 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useReducer, useEffect } from "react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
+type ProfileState = {
+  email: string;
+  password: string;
+  passLoading: boolean;
+  deleteLoading: boolean;
+  passMessage: { text: string; type: "success" | "error" } | null;
+};
+
+type ProfileAction =
+  | { type: 'setEmail'; payload: string }
+  | { type: 'fieldChanged'; value: string }
+  | { type: 'passUpdateStarted' }
+  | { type: 'passUpdateSuccess'; payload: string }
+  | { type: 'passUpdateFailed'; payload: string }
+  | { type: 'deleteStarted' };
+
+const initialState: ProfileState = {
+  email: "",
+  password: "",
+  passLoading: false,
+  deleteLoading: false,
+  passMessage: null,
+};
+
+function profileReducer(state: ProfileState, action: ProfileAction): ProfileState {
+  switch (action.type) {
+    case 'setEmail':
+      return { ...state, email: action.payload };
+    case 'fieldChanged':
+      return { ...state, password: action.value };
+    case 'passUpdateStarted':
+      return { ...state, passLoading: true, passMessage: null };
+    case 'passUpdateSuccess':
+      return { ...state, passLoading: false, password: "", passMessage: { type: "success", text: action.payload } };
+    case 'passUpdateFailed':
+      return { ...state, passLoading: false, passMessage: { type: "error", text: action.payload } };
+    case 'deleteStarted':
+      return { ...state, deleteLoading: true };
+    default:
+      return state;
+  }
+}
+
 export function ProfileClient() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [passLoading, setPassLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-  const [passMessage, setPassMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [state, dispatch] = useReducer(profileReducer, initialState);
+  const { email, password, passLoading, deleteLoading, passMessage } = state;
 
   const supabase = createClient();
   const router = useRouter();
@@ -23,7 +60,7 @@ export function ProfileClient() {
     async function loadUser() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        setEmail(user.email || "");
+        dispatch({ type: 'setEmail', payload: user.email || "" });
       }
     }
     loadUser();
@@ -33,34 +70,21 @@ export function ProfileClient() {
     e.preventDefault();
     if (!password) return;
     
-    setPassLoading(true);
-    setPassMessage(null);
+    dispatch({ type: 'passUpdateStarted' });
 
     const { error } = await supabase.auth.updateUser({
       password: password
     });
 
     if (error) {
-      // Handle the stale-session / AuthSessionMissingError gracefully
       if (error.message.toLowerCase().includes("session") || error.status === 401) {
-        setPassMessage({
-          type: "error",
-          text: "Your session has expired. Please log out and back in to change your password."
-        });
+        dispatch({ type: 'passUpdateFailed', payload: "Your session has expired. Please log out and back in to change your password." });
       } else {
-        setPassMessage({
-          type: "error",
-          text: error.message
-        });
+        dispatch({ type: 'passUpdateFailed', payload: error.message });
       }
     } else {
-      setPassMessage({
-        type: "success",
-        text: "Password updated successfully."
-      });
-      setPassword("");
+      dispatch({ type: 'passUpdateSuccess', payload: "Password updated successfully." });
     }
-    setPassLoading(false);
   };
 
   const handleRequestDeletion = async () => {
@@ -68,7 +92,7 @@ export function ProfileClient() {
       return;
     }
 
-    setDeleteLoading(true);
+    dispatch({ type: 'deleteStarted' });
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
@@ -138,7 +162,7 @@ export function ProfileClient() {
                   type="password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => dispatch({ type: 'fieldChanged', value: e.target.value })}
                   className="bg-muslin/50 dark:bg-black/20 border border-loom-iron/15 dark:border-muslin/15 px-4 py-3 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors text-loom-iron dark:text-muslin"
                   placeholder="••••••••"
                 />
