@@ -112,7 +112,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
     let isActive = true;
 
     const abortController = new AbortController();
-    
+
     // 400ms debounce for real server-side queries
     const timer = setTimeout(async () => {
       dispatch({ type: 'setLoading', payload: true });
@@ -151,15 +151,17 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
         if (error) {
           // Handle fetch error in UI state instead of leaking to browser console
         } else if (data) {
-          dispatch({ type: 'setReports', payload: data.map((r: any) => ({
-            id: r.id,
-            fabric_type: r.fabric_type,
-            confidence_score: r.confidence_score,
-            created_at: r.created_at,
-            ai_suggestions: r.ai_suggestions,
-            image_url: r.image_url,
-            file_name: undefined // Removed file_name as it's not present on reports
-          }))});
+          dispatch({
+            type: 'setReports', payload: data.map((r: any) => ({
+              id: r.id,
+              fabric_type: r.fabric_type,
+              confidence_score: r.confidence_score,
+              created_at: r.created_at,
+              ai_suggestions: r.ai_suggestions,
+              image_url: r.image_url,
+              file_name: undefined // Removed file_name as it's not present on reports
+            }))
+          });
         }
       } catch (err) {
         // Suppress leakage to console, query failure handles gracefully
@@ -196,26 +198,26 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
     // DB update succeeded. Remove from UI immediately.
     dispatch({ type: 'removeReport', payload: deleteId });
     dispatchDelete({ type: 'submitSucceeded' });
-    
+
     // Note: We deliberately do NOT delete the storage file here per the soft-delete architecture.
   };
 
   const handleDownloadImage = async (report: Report, e: React.MouseEvent) => {
     e.preventDefault();
     if (!report.image_url) return;
-    
+
     try {
       const res = await fetch(report.image_url);
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      
+
       const dateStr = new Date(report.created_at).toISOString().split('T')[0];
       const safeType = (report.fabric_type || "unknown").toLowerCase().replace(/[^a-z0-9]/g, '-');
       const shortId = report.id.substring(0, 6);
       a.download = `threadcounty-${safeType}-${dateStr}-${shortId}.png`;
-      
+
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -232,12 +234,12 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    
+
     const dateStr = new Date(report.created_at).toISOString().split('T')[0];
     const safeType = (report.fabric_type || "unknown").toLowerCase().replace(/[^a-z0-9]/g, '-');
     const shortId = report.id.substring(0, 6);
     a.download = `threadcounty-${safeType}-${dateStr}-${shortId}-data.json`;
-    
+
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -251,11 +253,11 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
           {partialFailureNote}
         </div>
       )}
-      
+
       {/* Filters Bar */}
       <CutCornerPanel variant="muslin" size="sm" bordered className="p-6">
         <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
-          
+
           <div className="w-full lg:w-1/3">
             <label className="block font-sans text-xs font-semibold text-loom-iron/60 mb-2 uppercase tracking-wider">Search</label>
             <input
@@ -281,8 +283,8 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
                     onClick={() => dispatch({ type: 'setConfFilter', payload: opt.value })}
                     className={cn(
                       "px-3 py-1.5 font-sans text-xs font-semibold transition-colors border",
-                      confFilter === opt.value 
-                        ? "bg-shuttle-red border-shuttle-red text-muslin clip-cut-btn" 
+                      confFilter === opt.value
+                        ? "bg-shuttle-red border-shuttle-red text-muslin clip-cut-btn"
                         : "bg-white border-loom-iron/15 text-loom-iron/70 hover:border-shuttle-red/50 hover:text-shuttle-red"
                     )}
                   >
@@ -306,8 +308,8 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
                     onClick={() => dispatch({ type: 'setDateFilter', payload: opt.value })}
                     className={cn(
                       "px-3 py-1.5 font-sans text-xs font-semibold transition-colors border",
-                      dateFilter === opt.value 
-                        ? "bg-loom-iron border-loom-iron text-muslin clip-cut-btn" 
+                      dateFilter === opt.value
+                        ? "bg-loom-iron border-loom-iron text-muslin clip-cut-btn"
                         : "bg-white border-loom-iron/15 text-loom-iron/70 hover:border-loom-iron hover:text-loom-iron"
                     )}
                   >
@@ -330,7 +332,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
           reports.map((report) => (
             <CutCornerPanel key={report.id} variant="muslin" bordered size="sm" className="overflow-hidden">
               <div className="flex flex-col sm:flex-row">
-                
+
                 {/* Thumbnail */}
                 <div className="sm:w-48 h-32 sm:h-auto bg-loom-iron/5 dark:bg-muslin/5 flex shrink-0 relative overflow-hidden">
                   {report.image_url ? (
@@ -365,14 +367,14 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
                   </div>
 
                   <div className="flex flex-wrap gap-4 items-center mt-auto pt-4 border-t border-loom-iron/5 dark:border-muslin/5">
-                    <button 
+                    <button
                       onClick={(e) => handleDownloadImage(report, e)}
                       className="font-sans text-xs font-medium text-concrete-grey hover:text-loom-iron dark:hover:text-muslin flex items-center gap-1.5 transition-colors"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                       Image
                     </button>
-                    <button 
+                    <button
                       onClick={(e) => handleDownloadData(report, e)}
                       className="font-sans text-xs font-medium text-concrete-grey hover:text-loom-iron dark:hover:text-muslin flex items-center gap-1.5 transition-colors"
                     >
@@ -406,7 +408,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
               <p className="font-sans text-sm text-concrete-grey mb-6">
                 This will permanently delete the analysis data and the uploaded fabric image. This action cannot be undone.
               </p>
-              
+
               {deleteError && (
                 <div className="mb-6 bg-madder/10 border border-madder/30 text-madder text-sm p-3 font-sans">
                   {deleteError}
@@ -431,8 +433,7 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
               </div>
             </CutCornerPanel>
           </div>
-        </div>
       )}
-    </div>
-  );
+        </div>
+      );
 }

@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils";
 
 export default function Pricing() {
   return (
-    <section 
+    <section
       id="pricing"
       className="py-24 sm:py-32 bg-muslin relative"
     >
       <div className="w-full max-w-[1400px] mx-auto px-6">
-        
+
         {/* Section Header */}
         <div className="mb-16 md:mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="max-w-2xl">
@@ -24,7 +24,7 @@ export default function Pricing() {
               Scale <span className="text-shuttle-red">instantly</span>.
             </p>
           </div>
-          <Link 
+          <Link
             href="/pricing"
             className="shrink-0 group flex items-center gap-2 font-mono text-sm uppercase tracking-wider text-loom-iron hover:text-shuttle-red transition-colors"
           >
@@ -40,7 +40,7 @@ export default function Pricing() {
           {PRICING_TIERS.map((tier) => {
             const isPro = tier.id === 'professional';
             const isEnterprise = tier.id === 'enterprise';
-            
+
             let variant: "muslin" | "shuttle-red" | "loom-iron" | "concrete-grey" = "muslin";
             if (isPro) variant = "shuttle-red";
             else if (isEnterprise) variant = "loom-iron";
@@ -56,7 +56,7 @@ export default function Pricing() {
                   )}
                 >
                   {isPro && (
-                    <div className="absolute top-6 right-12 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                    <div className="absolute top-0 right-0 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 translate-x-2 -translate-y-2 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
                       Recommended
                     </div>
                   )}
@@ -101,8 +101,8 @@ export default function Pricing() {
                     className={cn(
                       "w-full text-center block clip-cut-btn py-4 font-sans font-semibold uppercase tracking-wider text-sm transition-opacity hover:opacity-90 mt-auto",
                       variant === "shuttle-red" ? "bg-muslin text-shuttle-red" :
-                      variant === "loom-iron" ? "bg-shuttle-red text-muslin border-none" :
-                      "bg-loom-iron text-muslin"
+                        variant === "loom-iron" ? "bg-shuttle-red text-muslin border-none" :
+                          "bg-loom-iron text-muslin"
                     )}
                   >
                     {tier.id === 'enterprise' ? "Contact Sales" : "Get Started"}

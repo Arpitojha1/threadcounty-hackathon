@@ -50,7 +50,7 @@ function profileReducer(state: ProfileState, action: ProfileAction): ProfileStat
   }
 }
 
-export function ProfileClient({ isAdmin }: { isAdmin?: boolean }) {
+export function ProfileClient() {
   const [state, dispatch] = useReducer(profileReducer, initialState);
   const { email, password, passLoading, deleteLoading, passMessage } = state;
 
@@ -70,7 +70,7 @@ export function ProfileClient({ isAdmin }: { isAdmin?: boolean }) {
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) return;
-    
+
     dispatch({ type: 'passUpdateStarted' });
 
     const { error } = await supabase.auth.updateUser({
@@ -95,7 +95,7 @@ export function ProfileClient({ isAdmin }: { isAdmin?: boolean }) {
 
     dispatch({ type: 'deleteStarted' });
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (user) {
       // Soft delete: mark profile with deleted_at
       await supabase
@@ -125,7 +125,7 @@ export function ProfileClient({ isAdmin }: { isAdmin?: boolean }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
+
         {/* Left Column: Avatar & Basic Info */}
         <div className="md:col-span-1 space-y-6">
           <CutCornerPanel variant="muslin" bordered size="sm" className="p-8 flex flex-col items-center text-center">
@@ -151,11 +151,11 @@ export function ProfileClient({ isAdmin }: { isAdmin?: boolean }) {
               </Link>
             </CutCornerPanel>
           )}
-          
+
           {/* Security Panel */}
           <CutCornerPanel variant="muslin" bordered size="sm" className="p-8">
             <h2 className="font-display text-2xl uppercase text-loom-iron dark:text-muslin mb-6">Security</h2>
-            
+
             <form onSubmit={handleUpdatePassword} className="space-y-6">
               {passMessage && (
                 <div className={cn(
@@ -200,7 +200,7 @@ export function ProfileClient({ isAdmin }: { isAdmin?: boolean }) {
             <p className="font-sans text-sm text-loom-iron/70 dark:text-muslin/70 mb-6 max-w-md">
               Requesting account deletion will mark your profile for removal and log you out immediately. Your authentication record will remain until manually purged by support.
             </p>
-            
+
             <button
               onClick={handleRequestDeletion}
               disabled={deleteLoading}
