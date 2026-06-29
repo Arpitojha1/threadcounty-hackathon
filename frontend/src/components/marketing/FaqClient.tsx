@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useState } from "react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
@@ -89,9 +90,9 @@ export function FaqClient() {
       <div className="mt-16 text-center">
         <p className="font-sans text-concrete-grey">
           Still have questions?{" "}
-          <a href="/contact" className="font-semibold text-shuttle-red hover:underline">
+          <Link href="/contact" className="font-semibold text-shuttle-red hover:underline">
             Get in touch
-          </a>
+          </Link>
         </p>
       </div>
     </div>

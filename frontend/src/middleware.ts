@@ -59,9 +59,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // Admin users checking
-  if (user && pathname.startsWith("/admin")) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+  if (user && pathname.startsWith("/dashboard/admin")) {
+    const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
+    if (profile?.is_admin !== true) {
       console.log(`Redirecting unauthorized user from ${pathname} to /dashboard`);
       const dashboardUrl = request.nextUrl.clone();
       dashboardUrl.pathname = "/dashboard";

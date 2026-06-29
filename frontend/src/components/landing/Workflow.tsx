@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useReducedMotion, useMotionTemplate } from "framer-motion";
@@ -56,6 +57,7 @@ export default function Workflow() {
       id="workflow" 
       ref={containerRef}
       className="relative bg-loom-iron"
+      data-navbar-theme="dark"
       style={{ height: isReduced ? "auto" : "300vh" }}
     >
       <div
@@ -138,12 +140,12 @@ export default function Workflow() {
                     {/* Upload CTA on Card 1 */}
                     {i === 0 && (
                       <div className="mt-auto pt-4">
-                        <a
+                        <Link
                           href="/dashboard/upload"
                           className="inline-flex items-center justify-center bg-shuttle-red px-6 py-2.5 font-sans text-sm font-semibold text-muslin clip-cut-btn transition-colors hover:bg-shuttle-red/90 w-full"
                         >
                           Upload Fabric
-                        </a>
+                        </Link>
                       </div>
                     )}
                   </CutCornerPanel>

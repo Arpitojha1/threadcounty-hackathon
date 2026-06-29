@@ -10,7 +10,7 @@ def analyze_fabric_image(file_name: str):
     
     fabric_types = ["Cotton Twill", "Polyester Blend", "Denim", "Silk Charmeuse", "Linen"]
     
-    return {
+    result = {
         "thread_density": round(random.uniform(30.0, 150.0), 2),
         "warp_count": random.randint(20, 80),
         "weft_count": random.randint(20, 80),
@@ -21,3 +21,5 @@ def analyze_fabric_image(file_name: str):
             "No surface defects detected."
         ]
     }
+    print("MOCK AI RESULT 'ai_suggestions':", type(result["ai_suggestions"]), result["ai_suggestions"])
+    return result

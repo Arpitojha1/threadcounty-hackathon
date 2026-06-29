@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { WeaveGrid } from "@/components/ui/weave-grid";
 import { Metadata } from "next";
 
@@ -11,18 +12,18 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen bg-loom-iron flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="relative min-h-screen bg-loom-iron flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden" data-navbar-theme="dark">
       <WeaveGrid opacity={0.03} color="muslin" density="sparse" />
 
       {/* Top Logo */}
       <div className="absolute top-8 left-0 right-0 flex justify-center z-10">
-        <a
+        <Link
           href="/"
           className="flex items-baseline gap-0 font-display text-2xl uppercase tracking-wide"
         >
           <span className="text-muslin">THREAD</span>
           <span className="text-shuttle-red">COUNTY</span>
-        </a>
+        </Link>
       </div>
 
       {/* Vertical type treatment (Desktop only) */}
@@ -45,7 +46,7 @@ export default function AuthLayout({
 
       {/* Bottom Footer */}
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
-        <p className="font-mono text-xs text-concrete-grey tracking-wider">
+        <p suppressHydrationWarning className="font-mono text-xs text-concrete-grey tracking-wider">
           &copy; {new Date().getFullYear()} ThreadCounty
         </p>
       </div>

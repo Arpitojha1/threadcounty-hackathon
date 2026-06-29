@@ -1,0 +1,70 @@
+.scroll-stack-scroller {
+  position: relative; 
+  width: 100%; 
+  height: 100%;
+  overflow-y: auto; 
+  overflow-x: visible; 
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; 
+  scroll-behavior: smooth;
+  -webkit-transform: translateZ(0); 
+  transform: translateZ(0); 
+  will-change: scroll-position;
+}
+.scroll-stack-inner { 
+  /* Padding provides space for the scroll effect */
+  padding: 10vh 0 30vh; 
+  min-height: 100vh; 
+}
+
+.scroll-stack-card-wrapper { 
+  position: relative; 
+}
+
+.scroll-stack-card {
+  transform-origin: top center; 
+  will-change: transform, filter;
+  backface-visibility: hidden; 
+  transform-style: preserve-3d;
+  width: 100%; 
+  margin: 0;
+  box-sizing: border-box;
+  -webkit-transform: translateZ(0); 
+  transform: translateZ(0); 
+  position: relative;
+}
+
+@media (min-width: 769px) {
+  .scroll-stack-card {
+    /* Only apply the uniform height logic on desktop where stacking is active */
+    height: 480px; 
+    margin: 30px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  /* On mobile, lenis is disabled and we rely on standard scrolling. 
+     Cards shouldn't stack with 3D transforms, they just stack block-level. */
+  .scroll-stack-scroller {
+    overflow: visible;
+  }
+  .scroll-stack-inner {
+    padding: 2rem 0;
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .scroll-stack-card {
+    height: auto; /* Natural height on mobile */
+    margin: 0;
+  }
+  .scroll-stack-end {
+    display: none;
+  }
+}
+
+.scroll-stack-end { 
+  width: 100%; 
+  height: 1px; 
+}

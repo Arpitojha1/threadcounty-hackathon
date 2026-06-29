@@ -1,21 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useReducer } from "react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { cn } from "@/lib/utils";
 
+type FormState = {
+  name: string;
+  email: string;
+  message: string;
+  status: "idle" | "submitting" | "success" | "error";
+  errorMessage: string;
+};
+
+type FormAction =
+  | { type: 'fieldChanged'; name: keyof Pick<FormState, 'name' | 'email' | 'message'>; value: string }
+  | { type: 'submitStarted' }
+  | { type: 'submitFailed'; error: string }
+  | { type: 'submitSucceeded' }
+  | { type: 'reset' };
+
+const initialState: FormState = {
+  name: '',
+  email: '',
+  message: '',
+  status: "idle",
+  errorMessage: '',
+};
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case 'fieldChanged':
+      return { ...state, [action.name]: action.value };
+    case 'submitStarted':
+      return { ...state, status: "submitting", errorMessage: '' };
+    case 'submitFailed':
+      return { ...state, status: "error", errorMessage: action.error };
+    case 'submitSucceeded':
+      return { ...state, status: "success", name: '', email: '', message: '' };
+    case 'reset':
+      return { ...state, status: "idle" };
+    default:
+      return state;
+  }
+}
+
 export function ContactClient() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [state, dispatch] = useReducer(formReducer, initialState);
+  const { name, email, message, status, errorMessage } = state;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus("submitting");
-    setErrorMessage("");
+    dispatch({ type: 'submitStarted' });
 
     try {
       const res = await fetch("/api/contact", {
@@ -29,18 +64,14 @@ export function ContactClient() {
         throw new Error(data.error || "Failed to send message");
       }
 
-      setStatus("success");
-      setName("");
-      setEmail("");
-      setMessage("");
+      dispatch({ type: 'submitSucceeded' });
 
       // Reset after 5 seconds
       setTimeout(() => {
-        setStatus("idle");
+        dispatch({ type: 'reset' });
       }, 5000);
     } catch (err: any) {
-      setStatus("error");
-      setErrorMessage(err.message || "An unexpected error occurred.");
+      dispatch({ type: 'submitFailed', error: err.message || "An unexpected error occurred." });
     }
   };
 
@@ -110,7 +141,7 @@ export function ContactClient() {
                 type="text"
                 required
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => dispatch({ type: 'fieldChanged', name: 'name', value: e.target.value })}
                 className="bg-muslin/50 border border-loom-iron/15 px-4 py-3 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors"
                 placeholder="Jane Doe"
               />
@@ -125,7 +156,7 @@ export function ContactClient() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => dispatch({ type: 'fieldChanged', name: 'email', value: e.target.value })}
                 className="bg-muslin/50 border border-loom-iron/15 px-4 py-3 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors"
                 placeholder="jane@example.com"
               />
@@ -140,7 +171,7 @@ export function ContactClient() {
                 required
                 rows={5}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e) => dispatch({ type: 'fieldChanged', name: 'message', value: e.target.value })}
                 className="bg-muslin/50 border border-loom-iron/15 px-4 py-3 font-sans text-sm w-full focus:outline-none focus:border-shuttle-red transition-colors resize-none"
                 placeholder="How can we help?"
               />

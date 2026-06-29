@@ -25,9 +25,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
       weft_count,
       ai_suggestions,
       created_at,
-      uploads (
-        image_url
-      )
+      image_url
     `)
     .eq("id", id)
     .is("deleted_at", null)
@@ -73,7 +71,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   }
 
   const confidencePercent = Math.round(report.confidence_score || 0);
-  const imageUrl = Array.isArray(report.uploads) ? report.uploads[0]?.image_url : (report.uploads as any)?.image_url;
+  const imageUrl = report.image_url;
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
