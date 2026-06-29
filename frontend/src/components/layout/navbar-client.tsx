@@ -15,7 +15,7 @@ type NavbarClientProps = {
 
 const LOGGED_OUT_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Features", href: "/workflow" },
+  { label: "Features", href: "/#workflow" },
   { label: "Pricing", href: "/pricing" }
 ];
 
@@ -47,6 +47,8 @@ export function NavbarClient({ userEmail }: NavbarClientProps) {
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const isLoggedIn = !!userEmail;
+
+  const loggedInLinks = LOGGED_IN_LINKS;
 
   // Track overlap with dark sections
   const [sections, setSections] = useState<{ top: number; bottom: number }[]>([]);
@@ -170,7 +172,7 @@ export function NavbarClient({ userEmail }: NavbarClientProps) {
 
         {/* ── Desktop nav links ────────────────────────── */}
         <ul className="hidden items-center gap-8 md:flex">
-          {(!isLoggedIn ? LOGGED_OUT_LINKS : LOGGED_IN_LINKS).map((link) => (
+          {(!isLoggedIn ? LOGGED_OUT_LINKS : loggedInLinks).map((link) => (
             <li key={link.href}>
               <motion.a
                 href={link.href}
@@ -382,7 +384,7 @@ export function NavbarClient({ userEmail }: NavbarClientProps) {
         )}
       >
         <ul className="flex flex-col gap-1 px-4 py-4">
-          {(!isLoggedIn ? LOGGED_OUT_LINKS : LOGGED_IN_LINKS).map((link) => (
+          {(!isLoggedIn ? LOGGED_OUT_LINKS : loggedInLinks).map((link) => (
             <li key={link.href}>
               <a
                 href={link.href}

@@ -395,38 +395,42 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
         )}
       </div>
 
+
+
       {/* Delete Confirmation Modal */}
       {deleteId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-loom-iron/80 backdrop-blur-sm p-4">
-          <CutCornerPanel variant="muslin" size="sm" bordered className="w-full max-w-md p-6 shadow-2xl">
-            <h3 className="font-display text-xl uppercase text-loom-iron mb-2">Delete Report?</h3>
-            <p className="font-sans text-sm text-concrete-grey mb-6">
-              This will permanently delete the analysis data and the uploaded fabric image. This action cannot be undone.
-            </p>
-            
-            {deleteError && (
-              <div className="mb-6 bg-madder/10 border border-madder/30 text-madder text-sm p-3 font-sans">
-                {deleteError}
-              </div>
-            )}
+          <div className="w-full">
+            <CutCornerPanel variant="muslin" size="sm" bordered className="w-full max-w-md mx-auto p-6 shadow-2xl">
+              <h3 className="font-display text-xl uppercase text-loom-iron mb-2">Delete Report?</h3>
+              <p className="font-sans text-sm text-concrete-grey mb-6">
+                This will permanently delete the analysis data and the uploaded fabric image. This action cannot be undone.
+              </p>
+              
+              {deleteError && (
+                <div className="mb-6 bg-madder/10 border border-madder/30 text-madder text-sm p-3 font-sans">
+                  {deleteError}
+                </div>
+              )}
 
-            <div className="flex gap-4">
-              <button
-                onClick={() => dispatchDelete({ type: 'cancelDelete' })}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 font-sans font-semibold text-loom-iron border border-loom-iron/20 hover:bg-loom-iron/5 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="flex-1 clip-cut-btn bg-madder text-muslin px-4 py-2 font-sans font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </CutCornerPanel>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => dispatchDelete({ type: 'cancelDelete' })}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 font-sans font-semibold text-loom-iron border border-loom-iron/20 hover:bg-loom-iron/5 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 clip-cut-btn bg-madder text-muslin px-4 py-2 font-sans font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </CutCornerPanel>
+          </div>
         </div>
       )}
     </div>

@@ -51,12 +51,12 @@ export default function Pricing() {
                   variant={variant}
                   size="lg"
                   className={cn(
-                    "p-8 relative flex flex-col w-full min-h-[520px]",
+                    "p-12 relative flex flex-col w-full min-h-[520px]",
                     variant === "loom-iron" ? "text-muslin" : variant === "shuttle-red" ? "text-muslin" : "text-loom-iron"
                   )}
                 >
                   {isPro && (
-                    <div className="absolute top-4 right-8 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                    <div className="absolute top-6 right-12 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
                       Recommended
                     </div>
                   )}

@@ -298,7 +298,36 @@ export default function HeroScrollScrub() {
     }
   }, [reducedMotion, allLoaded, drawFrame]);
 
-  /* ── Scroll-driven frame scrubbing ────────────────────────── */
+  /* ── Autoplay when idle & Scroll handoff ──────────────────── */
+  const hasScrolledRef = useRef(false);
+
+  useEffect(() => {
+    if (reducedMotion || !allLoaded) return;
+
+    let animationFrameId: number;
+    let currentFloatIndex = lastDrawnRef.current < 0 ? 0 : lastDrawnRef.current;
+
+    const playLoop = () => {
+      // Stop the time-driven loop forever once a scroll event fires.
+      if (hasScrolledRef.current) return;
+
+      currentFloatIndex += 0.4; // ~24fps playback speed
+      const nextIndex = Math.floor(currentFloatIndex) % FRAME_COUNT;
+      
+      const frame = framesRef.current[nextIndex];
+      if (frame && frame.complete && frame.naturalWidth > 0) {
+        if (nextIndex !== lastDrawnRef.current) {
+          drawFrame(nextIndex);
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(playLoop);
+    };
+
+    animationFrameId = requestAnimationFrame(playLoop);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [allLoaded, reducedMotion, drawFrame]);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
@@ -306,15 +335,23 @@ export default function HeroScrollScrub() {
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     if (reducedMotion || !allLoaded) return;
-    const index = Math.min(
-      Math.floor(v * FRAME_COUNT),
-      FRAME_COUNT - 1
-    );
-    // Guard: only draw if the frame is actually loaded
-    const frame = framesRef.current[index];
-    if (frame && frame.complete && frame.naturalWidth > 0) {
-      if (index !== lastDrawnRef.current) {
-        drawFrame(index);
+
+    // Detect first real scroll movement
+    if (v > 0 && !hasScrolledRef.current) {
+      hasScrolledRef.current = true;
+    }
+
+    // Once user scrolls, scroll progress strictly dictates the frame
+    if (hasScrolledRef.current) {
+      const index = Math.min(
+        Math.floor(v * FRAME_COUNT),
+        FRAME_COUNT - 1
+      );
+      const frame = framesRef.current[index];
+      if (frame && frame.complete && frame.naturalWidth > 0) {
+        if (index !== lastDrawnRef.current) {
+          drawFrame(index);
+        }
       }
     }
   });

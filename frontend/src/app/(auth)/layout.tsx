@@ -12,7 +12,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen bg-loom-iron flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden" data-navbar-theme="dark">
+    <div className="relative min-h-screen bg-loom-iron flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden" data-navbar-theme="dark">
       <WeaveGrid opacity={0.03} color="muslin" density="sparse" />
 
       {/* Top Logo */}
@@ -40,8 +40,10 @@ export default function AuthLayout({
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md">
-        {children}
+      <div className="relative z-10 w-full">
+        <div className="w-full max-w-md mx-auto">
+          {children}
+        </div>
       </div>
 
       {/* Bottom Footer */}

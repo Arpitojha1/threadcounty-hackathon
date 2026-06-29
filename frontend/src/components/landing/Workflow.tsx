@@ -105,7 +105,7 @@ export default function Workflow() {
                     corner="tr"
                     size="lg"
                     variant={cardVariants[i]}
-                    className="p-8 h-full flex flex-col shadow-2xl transition-all duration-300 hover:border-shuttle-red"
+                    className="p-12 h-full flex flex-col shadow-2xl transition-all duration-300 hover:border-shuttle-red"
                   >
                     {/* Step number */}
                     <span className="font-mono text-sm tracking-widest opacity-60 mb-4">

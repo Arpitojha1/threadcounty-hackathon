@@ -93,7 +93,7 @@ export default async function AdminDashboardPage() {
 
   // Calculate Total Storage Bytes
   const totalBytes = uploadsStorageData?.reduce((sum, row) => sum + (row.file_size_bytes || 0), 0) || 0;
-  
+
   // Storage formatting helper reused from per-user dashboard logic
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 MB";
@@ -133,7 +133,7 @@ export default async function AdminDashboardPage() {
               <p className="font-display text-5xl text-muslin">{totalUploads || 0}</p>
               <p className="font-sans text-xs text-muslin/50 mt-2 max-w-xs">Platform-wide total, across all users. Not period-scoped.</p>
             </CutCornerPanel>
-            
+
             <CutCornerPanel variant="muslin" size="sm" bordered className="p-6 md:col-span-1">
               <h3 className="font-mono text-xs uppercase tracking-widest text-concrete-grey mb-2">Total Users</h3>
               <p className="font-display text-4xl text-loom-iron dark:text-muslin">{totalUsers || 0}</p>
@@ -194,7 +194,7 @@ export default async function AdminDashboardPage() {
             <h2 className="font-display text-xl uppercase text-loom-iron dark:text-muslin tracking-wide mb-4 border-b border-loom-iron/10 dark:border-muslin/10 pb-2">
               Registered Users
             </h2>
-            
+
             <UsersTableClient initialUsers={users} />
           </div>
 
@@ -203,7 +203,7 @@ export default async function AdminDashboardPage() {
             <h2 className="font-display text-xl uppercase text-loom-iron dark:text-muslin tracking-wide mb-4 border-b border-loom-iron/10 dark:border-muslin/10 pb-2">
               System Reports
             </h2>
-            
+
             <ReportsTableClient initialReports={reports} />
           </div>
         </>

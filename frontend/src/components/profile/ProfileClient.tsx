@@ -4,6 +4,7 @@ import { useReducer, useEffect } from "react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 type ProfileState = {
@@ -49,7 +50,7 @@ function profileReducer(state: ProfileState, action: ProfileAction): ProfileStat
   }
 }
 
-export function ProfileClient() {
+export function ProfileClient({ isAdmin }: { isAdmin?: boolean }) {
   const [state, dispatch] = useReducer(profileReducer, initialState);
   const { email, password, passLoading, deleteLoading, passMessage } = state;
 
@@ -138,6 +139,18 @@ export function ProfileClient() {
 
         {/* Right Column: Forms */}
         <div className="md:col-span-2 space-y-8">
+
+          {isAdmin && (
+            <CutCornerPanel variant="muslin" bordered size="sm" className="p-8">
+              <h2 className="font-display text-2xl uppercase text-loom-iron dark:text-muslin mb-2">Administration</h2>
+              <p className="font-sans text-sm text-loom-iron/70 dark:text-muslin/70 mb-6 max-w-md">
+                You have administrative access to platform statistics and user management.
+              </p>
+              <Link href="/dashboard/admin" className="clip-cut-btn bg-loom-iron dark:bg-muslin text-muslin dark:text-loom-iron px-6 py-3 font-sans font-semibold inline-block transition-opacity hover:opacity-90">
+                Open Admin Dashboard
+              </Link>
+            </CutCornerPanel>
+          )}
           
           {/* Security Panel */}
           <CutCornerPanel variant="muslin" bordered size="sm" className="p-8">
