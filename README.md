@@ -5,7 +5,8 @@ ThreadCounty is a modern web application that provides AI-powered textile analys
 ## Live Demo
 
 - **Frontend Application**: [https://threadcounty-hackathon.vercel.app](https://threadcounty-hackathon.vercel.app)
-- *Note: For the purposes of this hackathon demo, the AI analysis engine is fully mocked. Uploading an image triggers a simulated 2-second processing delay and returns randomly generated, plausible textile data.*
+- **Backend API**: `https://threadcounty-hackathon-production.up.railway.app`
+- *Note: For the purposes of this hackathon demo, the AI analysis engine is fully mocked. Uploading an image triggers a simulated processing delay and returns randomly generated, plausible textile data.*
 
 **To try the demo:**
 1. Visit the live URL and sign up for an account.
@@ -17,13 +18,13 @@ ThreadCounty is a modern web application that provides AI-powered textile analys
 - **Frontend**: Next.js 15 (App Router), React 19, TailwindCSS v4, shadcn/ui components, Framer Motion.
 - **Backend**: FastAPI (Python 3), Uvicorn.
 - **Database, Auth & Storage**: Supabase (PostgreSQL, Supabase Auth, Supabase Storage).
-- **Deployment**: Vercel (Frontend). Backend hosting is currently pending/local via Cloudflared tunnel.
+- **Deployment**: Vercel (Frontend), Railway (Backend).
 
 ## Architecture Overview
 
 ThreadCounty uses a deliberate read/write split architecture:
-- **FastAPI Backend**: Handles the `POST /api/upload` endpoint and the mocked AI processing step exclusively.
-- **Next.js Frontend**: All reads (fetching reports, notifications, user profiles) and direct user interactions (like marking notifications as read) are executed securely via the Supabase client directly against the database, bypassing the FastAPI backend entirely. 
+- **FastAPI Backend**: Handles the `POST /api/upload` endpoint and the mocked AI processing step exclusively. Deployed on Railway.
+- **Next.js Frontend**: All reads (fetching reports, notifications, user profiles) and direct user interactions (like marking notifications as read) are executed securely via the Supabase client directly against the database, bypassing the FastAPI backend entirely.
 
 This avoids building a redundant secondary backend layer for standard CRUD operations that Supabase can already serve efficiently.
 
@@ -33,7 +34,7 @@ This avoids building a redundant secondary backend layer for standard CRUD opera
 threadcounty-hackathon/
 ├── frontend/             # Next.js Application
 │   ├── public/           # Static assets
-│   └── src/              
+│   └── src/
 │       ├── app/          # Next.js App Router pages & API routes
 │       ├── components/   # UI components (shadcn & custom)
 │       └── lib/          # Supabase client configurations
@@ -47,27 +48,95 @@ threadcounty-hackathon/
 
 ## Database Schema
 
-The database consists of 6 primary tables in the `public` schema. *(Note: The repository contains `schema.sql` as a provisioning script, but the live database has drifted slightly—e.g., `profiles.is_admin` exists in production but not in the original script).*
+The database consists of 6 primary tables in the `public` schema. *(Note: The repository contains `schema.sql` as a provisioning script, but the live database has drifted slightly — e.g. `profiles.is_admin` exists in production but not in the original script.)*
 
-- **`profiles`**: User metadata (full name, avatar, `is_admin` flag).
+- **`profiles`**: User metadata (full name, username, avatar, `is_admin` flag).
 - **`subscriptions`**: The single source of truth for a user's plan tier (free, student, professional, enterprise) and quota cycle.
 - **`uploads`**: Immutable log of all image uploads. Used as the ground truth for quota tracking.
 - **`reports`**: The result of the AI analysis. Contains fabric metrics and soft-delete capabilities.
 - **`notifications`**: User alerts and messages.
 - **`contact_messages`**: Publicly submitted contact form inquiries (Insert-only for users).
 
-## API Contract
+Full live column inventory:
 
-The FastAPI backend exposes the following endpoint for AI processing:
+```text
+Table: profiles
+  - id: uuid
+  - full_name: text
+  - username: text
+  - avatar_url: text
+  - is_admin: boolean | default: false (manual flag, no self-service signup path)
+  - created_at: timestamptz | default: now()
+  - updated_at: timestamptz | default: now()
 
-**`POST /api/upload`**
+Table: subscriptions
+  - id: uuid | default: gen_random_uuid()
+  - user_id: uuid
+  - plan_tier: subscription_tier enum | default: free
+  - status: subscription_status enum | default: active
+  - current_period_start: timestamptz | default: now()
+  - current_period_end: timestamptz | default: now() + 30 days
+  - created_at: timestamptz | default: now()
+  - updated_at: timestamptz | default: now()
 
-**Request:** `multipart/form-data`
-- `file`: The image file to analyze.
-- `user_id`: String, the Supabase UUID of the uploading user.
-- `ai_model`: String, optional (defaults to `"standard"`).
+Table: uploads
+  - id: uuid | default: gen_random_uuid()
+  - user_id: uuid
+  - file_path: text
+  - file_size_bytes: bigint
+  - ai_model: text | default: standard
+  - created_at: timestamptz | default: now()
 
-**Response:** `application/json`
+Table: reports
+  - id: uuid | default: gen_random_uuid()
+  - user_id: uuid
+  - upload_id: uuid
+  - image_url: text
+  - thread_density: numeric
+  - warp_count: integer
+  - weft_count: integer
+  - fabric_type: text
+  - confidence_score: numeric
+  - ai_suggestions: text[]
+  - deleted_at: timestamptz (soft delete)
+  - created_at: timestamptz | default: now()
+
+Table: notifications
+  - id: uuid | default: gen_random_uuid()
+  - user_id: uuid
+  - title: text
+  - body: text
+  - is_read: boolean | default: false
+  - created_at: timestamptz | default: now()
+
+Table: contact_messages
+  - id: uuid | default: gen_random_uuid()
+  - name: text
+  - email: text
+  - message: text
+  - created_at: timestamptz | default: now()
+```
+
+**Row-Level Security**: All 6 tables have RLS enabled. Standard policy shape is "users can read/write only their own rows," with `contact_messages` as the sole exception (public insert-only, no select for anyone but the service role). The exact live policy list could not be re-introspected via the REST API for this document (`pg_policies` isn't exposed through the schema cache without a direct Postgres connection), but this matches what `schema.sql` defines and was manually spot-checked during development.
+
+## API Documentation
+
+The FastAPI backend exposes one endpoint for AI processing. All other reads/writes go directly through the Supabase client from the frontend (see Architecture Overview).
+
+### `POST /api/upload`
+
+**Base URL**: `https://threadcounty-hackathon-production.up.railway.app`
+
+**Content-Type:** `multipart/form-data`
+
+**Request fields:**
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `file` | File | Yes | Must be an image. |
+| `user_id` | string | Yes | Supabase Auth UID of the uploading user. |
+| `ai_model` | string | No | Defaults to `"standard"`. |
+
+**Success response — `200 OK`:**
 ```json
 {
   "status": "success",
@@ -87,6 +156,20 @@ The FastAPI backend exposes the following endpoint for AI processing:
   }
 }
 ```
+
+**Error responses:**
+
+| Status | When | Example body |
+|---|---|---|
+| `400` / `422` | Missing `file` or `user_id`, or `file` is not a valid image | `{"detail": "A valid image file is required."}` |
+| `402` / `403` | User has hit their plan tier's monthly upload quota | `{"detail": "Upload limit reached for your current plan."}` |
+| `500` | Unexpected server-side failure (sanitized — no raw Postgres/Supabase error text is ever returned to the client) | `{"detail": "Something went wrong processing your upload."}` |
+
+Quota limits are tracked against the immutable `uploads` table (never `reports`, since soft-deleted reports must not refund quota) and scoped to each user's current 30-day `subscriptions` billing period, not a calendar month.
+
+**Known gap**: the backend's tier-limits mapping currently only has explicit entries for `free`, and the original intended entries for `student`/`professional`/`enterprise` are missing — those tiers silently fall back to the free tier's limit (5/period) rather than their intended higher limits. This is a known, accepted hackathon-scope gap, not a bug fixed before submission.
+
+**CORS**: the Railway backend's CORS policy allowlists the live Vercel frontend origin. A real upload from the deployed Vercel site through to the Railway backend has been tested and confirmed working end-to-end (not just configured — actually verified).
 
 ## Design System
 
@@ -108,7 +191,7 @@ You will need to request the `.env` values from the project owner. **Do not comm
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_API_URL` (Defaults to `http://127.0.0.1:8000` if not set)
+- `NEXT_PUBLIC_API_URL` — defaults to `http://127.0.0.1:8000` for local dev; production deployment points this at the Railway URL above instead.
 
 **`backend/.env`** requires:
 - `SUPABASE_URL`
@@ -133,14 +216,21 @@ npm run dev
 ## Deployment
 
 - **Frontend**: Deployed continuously via Vercel at `https://threadcounty-hackathon.vercel.app`.
-- **Backend**: Currently configured for local hosting and exposed via a `cloudflared` tunnel for the demo. Railway migration is pending. 
-- **CORS**: The FastAPI backend is configured to accept requests from both `http://localhost:3000` and the production Vercel frontend URL.
+- **Backend**: Deployed on Railway at `https://threadcounty-hackathon-production.up.railway.app`.
+- **CORS**: The FastAPI backend is configured to accept requests from both `http://localhost:3000` (local dev) and the production Vercel frontend URL. This has been confirmed working against a real upload from the live deployed site, not just by code review.
 
 ## Known Limitations
 
-- **Mock AI Analysis**: As permitted by the hackathon rules, the computer vision engine is completely mocked.
-- **[CONFIRM: RLS policies]**: The exact live Row-Level Security policies could not be automatically introspected via the API, though the schema intends for users to only access their own data.
-- **Backend Hosting**: The backend currently relies on a temporary tunnel rather than a persistent production host.
+This is a hackathon project, purpose-built for a weekend judging window — not a production system. The following are intentional scope decisions, not oversights:
+
+- **Mock AI Analysis**: As permitted by the hackathon rules, the computer vision engine is completely mocked. Uploads return realistic-looking randomized textile data rather than real CV inference.
+- **Mocked Billing/Checkout**: The student/professional/enterprise upgrade flow has no real payment processor behind it. Plan changes happen instantly with no actual transaction.
+- **Admin Access — Manual Only**: There is no signup flow or in-app UI to become an admin. To grant admin access, manually set `is_admin = true` on the target user's row in `profiles` via the Supabase SQL editor or table editor.
+- **Contact Form — No Email Notification**: The "Contact Us" form writes successfully to the `contact_messages` table, but no transactional email is sent on submission. Supabase's project is running on the default mailer, which only delivers to addresses belonging to the Supabase organization's own team members — there is no custom SMTP provider configured. Submissions are visible by querying `contact_messages` directly in the Supabase dashboard.
+- **Auth Emails — Team Addresses Only**: Email confirmation and password reset emails work, but only for email addresses that belong to the Supabase project's team members, for the same default-mailer reason above. A real end user signing up with an arbitrary email will not receive a confirmation email.
+- **Tier Limits Gap**: See the Known Gap note in the API Documentation section above — non-free tiers silently use the free tier's quota limit due to missing dict keys in the backend.
+- **`schema.sql` Drift**: The live database has at least one column (`profiles.is_admin`) not reflected in the committed `schema.sql`. The live schema is the source of truth; the SQL file is a provisioning script, not a perfectly synced mirror.
+- **RLS Policy List Not Independently Re-verified for This Document**: Policies match what `schema.sql` defines and were manually checked during development, but could not be re-queried live via the REST API without a direct Postgres connection string.
 
 ## Hackathon Context
 
