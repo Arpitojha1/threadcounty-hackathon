@@ -177,15 +177,25 @@ The application employs a refined "neo-brutalist" aesthetic. Key elements includ
 
 ## Local Development Setup
 
-To run ThreadCounty locally, follow these steps:
+**No setup is required to try the product** — the Live Demo links above are fully functional and connected to the real production database. The steps below are only needed if you want to run ThreadCounty yourself, against your own Supabase project (e.g. to inspect the code running live, or modify it).
 
 ### Prerequisites
 - Node.js (v20+)
 - Python (v3.10+)
-- A Supabase project
+- A Supabase account (free tier is enough) — you will create your own project, this app does not require access to the original one
 
-### Environment Variables
-You will need to request the `.env` values from the project owner. **Do not commit actual secrets.**
+### 1. Create and Provision a Supabase Project
+1. Create a new project at [supabase.com](https://supabase.com).
+2. Go to the SQL Editor and run the entire contents of `backend/schema.sql` (or wherever it lives in your copy of the repo) as one paste. This creates all 6 tables, the `subscription_tier`/`subscription_status` enums, the `handle_new_user()` signup trigger, RLS policies, and the `fabric-images` storage bucket.
+3. **Known drift**: `schema.sql` does not include the `profiles.is_admin` column that exists on the live production database (see Known Limitations). After running the schema, also run:
+   ```sql
+   alter table public.profiles add column is_admin boolean not null default false;
+   ```
+4. Run the verification queries in `backend/verify.sql` (one block at a time, reading the actual output) to confirm: all 6 tables exist, RLS is enabled on each, the storage bucket exists and is public, and the signup trigger correctly creates both a `profiles` and `subscriptions` row. Don't skip this — "the SQL ran without error" is not the same as "matches what the app expects."
+5. From your new project's Settings → API page, collect: the Project URL, the `anon` public key, and the `service_role` key (keep this one secret).
+
+### 2. Environment Variables
+**Do not commit actual secrets.**
 
 **`frontend/.env.local`** requires:
 - `NEXT_PUBLIC_SUPABASE_URL`
@@ -197,7 +207,9 @@ You will need to request the `.env` values from the project owner. **Do not comm
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-### Running the Backend
+Use the values collected in step 1.5 above for both files — they point at your own fresh Supabase project, not the original one.
+
+### 3. Running the Backend
 ```bash
 cd backend
 python -m venv venv
@@ -206,11 +218,17 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-### Running the Frontend
+### 4. Running the Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
+```
+
+### 5. Granting Yourself Admin Access
+There is no signup flow for this — see Known Limitations. After signing up through the running app, run this in your Supabase SQL Editor, using the UID from `auth.users` (or `profiles`) for the account you want elevated:
+```sql
+update public.profiles set is_admin = true where id = '<your-user-uuid-here>';
 ```
 
 ## Deployment
@@ -225,7 +243,10 @@ This is a hackathon project, purpose-built for a weekend judging window — not 
 
 - **Mock AI Analysis**: As permitted by the hackathon rules, the computer vision engine is completely mocked. Uploads return realistic-looking randomized textile data rather than real CV inference.
 - **Mocked Billing/Checkout**: The student/professional/enterprise upgrade flow has no real payment processor behind it. Plan changes happen instantly with no actual transaction.
-- **Admin Access — Manual Only**: There is no signup flow or in-app UI to become an admin. To grant admin access, manually set `is_admin = true` on the target user's row in `profiles` via the Supabase SQL editor or table editor.
+- **Admin Access — Manual Only**: There is no signup flow or in-app UI to become an admin. To grant admin access, run the following in the Supabase SQL Editor (Dashboard → SQL Editor → New Query), replacing the UUID with the target user's `id` from `auth.users` or `profiles`:
+  ```sql
+  update public.profiles set is_admin = true where id = '<user-uuid-here>';
+  ```
 - **Contact Form — No Email Notification**: The "Contact Us" form writes successfully to the `contact_messages` table, but no transactional email is sent on submission. Supabase's project is running on the default mailer, which only delivers to addresses belonging to the Supabase organization's own team members — there is no custom SMTP provider configured. Submissions are visible by querying `contact_messages` directly in the Supabase dashboard.
 - **Auth Emails — Team Addresses Only**: Email confirmation and password reset emails work, but only for email addresses that belong to the Supabase project's team members, for the same default-mailer reason above. A real end user signing up with an arbitrary email will not receive a confirmation email.
 - **Tier Limits Gap**: See the Known Gap note in the API Documentation section above — non-free tiers silently use the free tier's quota limit due to missing dict keys in the backend.
