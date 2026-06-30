@@ -10,7 +10,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-muslin selection:bg-shuttle-red selection:text-muslin pt-20">
       <div className="w-full max-w-7xl mx-auto px-6 py-24 sm:py-32 space-y-32">
-        
+
         {/* Story & Mission Section */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
@@ -48,7 +48,7 @@ export default function AboutPage() {
               We leverage modern infrastructure to process high-resolution imagery securely and quickly.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <CutCornerPanel variant="transparent" bordered size="sm" className="p-8 border-loom-iron/10 bg-white">
               <div className="font-mono text-xs uppercase tracking-widest text-shuttle-red mb-4">Frontend</div>
@@ -57,7 +57,7 @@ export default function AboutPage() {
                 Built on the App Router for optimal performance, utilizing Server Components for fast initial loads and Framer Motion for fluid transitions.
               </p>
             </CutCornerPanel>
-            
+
             <CutCornerPanel variant="transparent" bordered size="sm" className="p-8 border-loom-iron/10 bg-white">
               <div className="font-mono text-xs uppercase tracking-widest text-shuttle-red mb-4">Backend</div>
               <h3 className="font-display text-2xl uppercase text-loom-iron mb-4">Python FastAPI</h3>
@@ -88,26 +88,26 @@ export default function AboutPage() {
                 ThreadCounty Hackathon Team
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-4">
                 <div className="aspect-[3/4] bg-concrete-grey/20 clip-cut-btn overflow-hidden grayscale contrast-125">
                   {/* Placeholder for team photo */}
-                  <div className="w-full h-full bg-muslin/5 flex items-center justify-center font-mono text-[10px] text-muslin/30">PHOTO_01</div>
+                  <div className="w-full h-full bg-muslin/5 flex items-center justify-center font-mono text-[10px] text-muslin/30">i dont have any good pics</div>
                 </div>
                 <div>
-                  <div className="font-display text-lg uppercase text-muslin">Jane Doe</div>
+                  <div className="font-display text-lg uppercase text-muslin">Arpit Ojha</div>
                   <div className="font-mono text-xs text-concrete-grey">Lead Engineer</div>
                 </div>
               </div>
-              
+
               <div className="space-y-4 mt-12">
                 <div className="aspect-[3/4] bg-concrete-grey/20 clip-cut-btn overflow-hidden grayscale contrast-125">
                   {/* Placeholder for team photo */}
                   <div className="w-full h-full bg-muslin/5 flex items-center justify-center font-mono text-[10px] text-muslin/30">PHOTO_02</div>
                 </div>
                 <div>
-                  <div className="font-display text-lg uppercase text-muslin">John Smith</div>
+                  <div className="font-display text-lg uppercase text-muslin">This is just a place holder</div>
                   <div className="font-mono text-xs text-concrete-grey">Computer Vision</div>
                 </div>
               </div>
