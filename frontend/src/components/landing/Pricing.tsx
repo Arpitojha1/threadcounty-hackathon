@@ -56,7 +56,7 @@ export default function Pricing() {
                   )}
                 >
                   {isPro && (
-                    <div className="absolute top-0 right-0 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 translate-x-2 -translate-y-2 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                    <div className="absolute top-4 left-0 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 translate-x-2 -translate-y-2 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
                       Recommended
                     </div>
                   )}

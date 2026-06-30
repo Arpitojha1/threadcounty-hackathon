@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { WeaveGrid } from "@/components/ui/weave-grid";
 import { cn } from "@/lib/utils";
+import { PageLoader } from "@/components/ui/PageLoader";
 
 const LOADING_MESSAGES = [
   "Uploading secure image...",
@@ -153,6 +154,7 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
     const baseUrl = apiUrlRaw !== undefined ? apiUrlRaw : 'http://127.0.0.1:8000';
     const backendUrl = `${baseUrl}/api/upload`;
 
+    let hasError = false;
     try {
       // Do NOT set Content-Type header. Let the browser set the multipart boundary.
       const response = await fetch(backendUrl, {
@@ -193,8 +195,8 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
       }
       
     } catch (err: any) {
+      hasError = true;
       clearTimeout(timeoutId);
-      dispatch({ type: 'setStatus', status: "error" });
       
       if (err.name === "AbortError") {
         dispatch({ type: 'setErrorMessage', errorMessage: "This is taking longer than expected. The server may be busy — you can try again." });
@@ -207,6 +209,8 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
       } else {
         dispatch({ type: 'setErrorMessage', errorMessage: "Network error: Unable to reach the processing server. Ensure the backend is running." });
       }
+    } finally {
+      dispatch({ type: 'setStatus', status: hasError ? "error" : "idle" });
     }
   };
 
@@ -220,43 +224,9 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
     }
   };
 
-  if (status === "uploading") {
-    return (
-      <CutCornerPanel variant="muslin" size="lg" className="w-full min-h-[400px] p-8 md:p-12 relative overflow-hidden flex flex-col items-center justify-center text-center">
-        {/* Animated Weave Grid Background */}
-        <motion.div 
-          className="absolute inset-0 z-0 opacity-20"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <WeaveGrid color="shuttle-red" density="dense" />
-        </motion.div>
-
-        <div className="relative z-10">
-          <div className="w-16 h-16 rounded-full border-4 border-shuttle-red/20 border-t-shuttle-red animate-spin mx-auto mb-8"></div>
-          
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={loadingStep}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="font-display text-2xl uppercase tracking-wide text-loom-iron"
-            >
-              {LOADING_MESSAGES[loadingStep] || "Processing..."}
-            </motion.div>
-          </AnimatePresence>
-          <p className="font-sans text-sm text-loom-iron/60 mt-4 max-w-xs mx-auto">
-            Our AI is evaluating the microscopic structures of your fabric. This usually takes a few moments.
-          </p>
-        </div>
-      </CutCornerPanel>
-    );
-  }
-
   return (
     <div className="space-y-6">
+      <PageLoader isVisible={status === "uploading"} />
       {errorMessage && (
         <div className="bg-madder/10 border border-madder/30 text-madder text-sm p-4 font-sans flex flex-col gap-2">
           <div className="flex items-start gap-3">
@@ -327,10 +297,10 @@ export function UploadClient({ userId, tier }: { userId: string, tier: string })
                 alt="Preview" 
                 className="w-full h-full object-cover relative z-10"
               />
-              <div className="absolute inset-0 bg-loom-iron/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center justify-center">
+              <div className="absolute inset-0 bg-loom-iron/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-20">
                 <button 
                   onClick={resetSelection}
-                  className="font-sans font-semibold text-muslin border border-muslin/30 hover:bg-muslin/10 px-4 py-2 transition-colors"
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-sans font-semibold text-muslin border border-muslin/30 hover:bg-muslin/10 px-4 py-2 transition-colors"
                 >
                   Remove Image
                 </button>

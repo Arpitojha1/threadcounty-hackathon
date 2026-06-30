@@ -18,13 +18,13 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
 
   const handleSubscribe = (tierId: PricingTierId) => {
     if (tierId === 'free' && currentTier === 'free') return;
-    
+
     // Enterprise routing
     if (tierId === 'enterprise') {
       window.location.href = "/contact?plan=enterprise";
       return;
     }
-    
+
     // Student routing
     if (tierId === 'student') {
       if (!studentCertified) {
@@ -35,13 +35,13 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
       window.location.href = "/dashboard/billing/checkout?plan=student";
       return;
     }
-    
+
     // Free (if logged out) or Pro routing
     if (tierId === 'free' && !currentTier) {
       window.location.href = "/login";
       return;
     }
-    
+
     if (tierId === 'professional') {
       window.location.href = "/dashboard/billing/checkout?plan=professional";
       return;
@@ -80,7 +80,7 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
           const isPro = tier.id === 'professional';
           const isEnterprise = tier.id === 'enterprise';
           const isStudent = tier.id === 'student';
-          
+
           let variant: "muslin" | "shuttle-red" | "loom-iron" | "concrete-grey" = "muslin";
           if (isPro) variant = "shuttle-red";
           else if (isEnterprise) variant = "loom-iron";
@@ -98,19 +98,19 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
               >
                 {/* Badges */}
                 {isPro && !isCurrent && (
-                  <div className="absolute top-4 right-8 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                  <div className="absolute top-2 left-2 bg-muslin text-shuttle-red font-mono text-xs uppercase tracking-widest px-4 py-1.5 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
                     Most Popular
                   </div>
                 )}
-                
+
                 {isStudent && !isCurrent && (
-                  <div className="absolute top-4 right-8 bg-concrete-grey text-muslin font-mono text-xs uppercase tracking-widest px-3 py-1 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
+                  <div className="absolute top-2 left-2 bg-concrete-grey text-muslin font-mono text-xs uppercase tracking-widest px-3 py-1 border border-loom-iron/10 shadow-sm z-10 clip-cut-btn">
                     Self-Certified
                   </div>
                 )}
 
                 {isCurrent && (
-                  <div className="absolute top-4 right-8 bg-dye-indigo text-muslin font-mono text-xs uppercase tracking-widest px-4 py-1.5 shadow-sm z-10 clip-cut-btn">
+                  <div className="absolute top-2 left-2 bg-dye-indigo text-muslin font-mono text-xs uppercase tracking-widest px-4 py-1.5 shadow-sm z-10 clip-cut-btn">
                     Current Plan
                   </div>
                 )}
@@ -155,8 +155,8 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
                 {isStudent && (
                   <label className="flex items-start gap-3 mb-6 cursor-pointer group relative z-20">
                     <div className="relative flex items-center justify-center w-5 h-5 shrink-0 mt-0.5 border-2 border-loom-iron/30 group-hover:border-shuttle-red transition-colors bg-white">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="opacity-0 absolute inset-0 cursor-pointer"
                         checked={studentCertified}
                         onChange={(e) => setStudentCertified(e.target.checked)}
@@ -191,18 +191,18 @@ export function PricingClient({ currentTier = null }: PricingClientProps) {
                   disabled={isCurrent}
                   className={cn(
                     "w-full clip-cut-btn py-4 font-sans font-semibold uppercase tracking-wider text-sm transition-opacity hover:opacity-90 mt-auto relative z-20",
-                    isCurrent ? "bg-dye-indigo text-muslin cursor-not-allowed" : 
-                    variant === "shuttle-red" ? "bg-muslin text-shuttle-red" :
-                    variant === "loom-iron" ? "bg-shuttle-red text-muslin border-none" :
-                    "bg-loom-iron text-muslin",
+                    isCurrent ? "bg-dye-indigo text-muslin cursor-not-allowed" :
+                      variant === "shuttle-red" ? "bg-muslin text-shuttle-red" :
+                        variant === "loom-iron" ? "bg-shuttle-red text-muslin border-none" :
+                          "bg-loom-iron text-muslin",
                     isStudent && !studentCertified && !isCurrent ? "opacity-50 cursor-not-allowed" : ""
                   )}
                 >
-                  {isCurrent ? "Current Plan" : 
-                   isEnterprise ? "Contact Sales" : 
-                   (tier.id === 'free' && !currentTier) ? "Sign Up Free" :
-                   (!currentTier) ? "Sign up to upgrade" :
-                   "Upgrade"}
+                  {isCurrent ? "Current Plan" :
+                    isEnterprise ? "Contact Sales" :
+                      (tier.id === 'free' && !currentTier) ? "Sign Up Free" :
+                        (!currentTier) ? "Sign up to upgrade" :
+                          "Upgrade"}
                 </button>
               </CutCornerPanel>
             </div>

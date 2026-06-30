@@ -31,7 +31,7 @@ export default async function AdminDashboardPage() {
   // Fetch profiles
   const { data: profiles, error: usersError } = await supabase
     .from("profiles")
-    .select("id, full_name, created_at")
+    .select("id, full_name, username, created_at")
     .order("created_at", { ascending: false });
 
   // Fetch subscriptions

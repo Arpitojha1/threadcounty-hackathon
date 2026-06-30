@@ -13,6 +13,7 @@ type ProfileClientProps = {
 
 type ProfileState = {
   email: string;
+  username: string | null;
   password: string;
   passLoading: boolean;
   deleteLoading: boolean;
@@ -21,6 +22,7 @@ type ProfileState = {
 
 type ProfileAction =
   | { type: 'setEmail'; payload: string }
+  | { type: 'setUsername'; payload: string | null }
   | { type: 'fieldChanged'; value: string }
   | { type: 'passUpdateStarted' }
   | { type: 'passUpdateSuccess'; payload: string }
@@ -29,6 +31,7 @@ type ProfileAction =
 
 const initialState: ProfileState = {
   email: "",
+  username: null,
   password: "",
   passLoading: false,
   deleteLoading: false,
@@ -39,6 +42,8 @@ function profileReducer(state: ProfileState, action: ProfileAction): ProfileStat
   switch (action.type) {
     case 'setEmail':
       return { ...state, email: action.payload };
+    case 'setUsername':
+      return { ...state, username: action.payload };
     case 'fieldChanged':
       return { ...state, password: action.value };
     case 'passUpdateStarted':
@@ -56,7 +61,7 @@ function profileReducer(state: ProfileState, action: ProfileAction): ProfileStat
 
 export function ProfileClient({ isAdmin }: ProfileClientProps) {
   const [state, dispatch] = useReducer(profileReducer, initialState);
-  const { email, password, passLoading, deleteLoading, passMessage } = state;
+  const { email, username, password, passLoading, deleteLoading, passMessage } = state;
 
   const supabase = createClient();
   const router = useRouter();
@@ -66,6 +71,17 @@ export function ProfileClient({ isAdmin }: ProfileClientProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         dispatch({ type: 'setEmail', payload: user.email || "" });
+        
+        // Fetch username from profiles table
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", user.id)
+          .single();
+          
+        if (profile) {
+          dispatch({ type: 'setUsername', payload: profile.username });
+        }
       }
     }
     loadUser();
@@ -137,6 +153,9 @@ export function ProfileClient({ isAdmin }: ProfileClientProps) {
               <span className="font-display text-3xl text-muslin dark:text-loom-iron">{initials}</span>
             </div>
             <h3 className="font-sans font-medium text-loom-iron dark:text-muslin mb-1 truncate w-full">{email}</h3>
+            {username && (
+              <p className="font-mono text-sm text-loom-iron/80 dark:text-muslin/80 mb-2">@{username}</p>
+            )}
             <p className="font-mono text-xs text-concrete-grey">Standard Plan</p>
           </CutCornerPanel>
         </div>

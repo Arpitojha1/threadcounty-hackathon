@@ -4,6 +4,7 @@ import { useReducer, useState, useEffect } from "react";
 import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { ImageOff } from "lucide-react";
 
 type DeleteState = {
   deleteId: string | null;
@@ -338,7 +339,9 @@ export function HistoryClient({ initialReports }: HistoryClientProps) {
                   {report.image_url ? (
                     <img src={report.image_url} alt={report.fabric_type} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center font-mono text-xs text-concrete-grey">NO IMAGE</div>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageOff size={48} className="text-concrete-grey" />
+                    </div>
                   )}
                   <div className="absolute top-2 left-2 bg-loom-iron text-muslin font-mono text-[10px] px-1.5 py-0.5 tracking-wider">
                     {Math.round(report.confidence_score || 0)}% MATCH

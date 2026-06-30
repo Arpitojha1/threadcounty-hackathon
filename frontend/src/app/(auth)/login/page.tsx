@@ -7,6 +7,7 @@ import { CutCornerPanel } from "@/components/ui/cut-corner-panel";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { setRememberMeCookie, clearRememberMeCookie } from "@/app/auth/cookie-actions";
+import { PageLoader } from "@/components/ui/PageLoader";
 
 type FormState = {
   email: string;
@@ -69,35 +70,45 @@ function LoginForm() {
     e.preventDefault();
     dispatch({ type: 'submitStarted' });
 
-    const supabase = createClient();
+    let hasError = false;
+    try {
+      const supabase = createClient();
+      await setRememberMeCookie(rememberMe);
 
-    // Set cookie BEFORE sign-in so that the Supabase client catches it
-    await setRememberMeCookie(rememberMe);
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (signInError) {
-      await clearRememberMeCookie();
-      const msg = signInError.message.toLowerCase();
-      if (msg.includes("invalid login credentials")) {
-        dispatch({ type: 'submitFailed', error: "Wrong email or password. Please try again." });
-      } else if (msg.includes("not confirmed") || msg.includes("email")) {
-        dispatch({ type: 'submitFailed', error: "Your email has not been verified yet. Please check your inbox for the verification link." });
+      if (signInError) {
+        hasError = true;
+        await clearRememberMeCookie();
+        const msg = signInError.message.toLowerCase();
+        if (msg.includes("invalid login credentials")) {
+          dispatch({ type: 'submitFailed', error: "Wrong email or password. Please try again." });
+        } else if (msg.includes("not confirmed") || msg.includes("email")) {
+          dispatch({ type: 'submitFailed', error: "Your email has not been verified yet. Please check your inbox for the verification link." });
+        } else {
+          dispatch({ type: 'submitFailed', error: signInError.message });
+        }
       } else {
-        dispatch({ type: 'submitFailed', error: signInError.message });
+        router.push("/dashboard");
+        router.refresh(); // Ensure server components update with the new session
       }
-      return;
+    } catch (err: any) {
+      hasError = true;
+      dispatch({ type: 'submitFailed', error: err.message || "An unexpected error occurred." });
+    } finally {
+      if (!hasError) {
+        dispatch({ type: 'submitSucceeded' });
+      }
     }
-
-    router.push("/dashboard");
-    router.refresh(); // Ensure server components update with the new session
   };
 
   return (
-    <CutCornerPanel variant="muslin" size="lg" className="w-full p-8 md:p-10">
+    <>
+      <PageLoader isVisible={loading} />
+      <CutCornerPanel variant="muslin" size="lg" className="w-full p-8 md:p-10">
       <h1 className="font-display text-2xl uppercase text-loom-iron mb-2">
         SIGN IN
       </h1>
@@ -195,6 +206,7 @@ function LoginForm() {
         </Link>
       </div>
     </CutCornerPanel>
+    </>
   );
 }
 
