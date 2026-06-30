@@ -19,7 +19,8 @@ export default async function DashboardPage() {
   // Fetch data concurrently
   const [
     { count: uploadsCount, data: storageData },
-    { data: reportsData }
+    { data: reportsData },
+    { data: profileData }
   ] = await Promise.all([
     supabase
       .from("uploads")
@@ -31,11 +32,19 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(5)
+      .limit(5),
+    supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .single()
   ]);
 
   const totalBytes = storageData?.reduce((acc, row) => acc + (row.file_size_bytes || 0), 0) || 0;
   const recentReports = reportsData || [];
+
+  const rawUsername = profileData?.username;
+  const displayUsername = rawUsername || (user.email ? user.email.split('@')[0] : "User");
 
   // Construct timeline from reports
   const timelineItems = recentReports.map((r) => ({
@@ -48,7 +57,7 @@ export default async function DashboardPage() {
   return (
     <div className="w-full space-y-6">
       <UpgradeToast />
-      <WelcomeSection email={user.email || ""} />
+      <WelcomeSection username={displayUsername} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1 h-48">

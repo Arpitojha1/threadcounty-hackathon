@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
-export function WelcomeSection({ email }: { email: string }) {
+export function WelcomeSection({ username }: { username: string }) {
   const [greeting, setGreeting] = useState("WELCOME BACK");
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function WelcomeSection({ email }: { email: string }) {
     >
       <h1 className="font-display text-4xl md:text-5xl uppercase text-loom-iron dark:text-muslin tracking-wide">
         {greeting},<br />
-        <span className="text-shuttle-red break-all">{email}</span>
+        <span className="text-shuttle-red break-all">{username}</span>
       </h1>
     </motion.div>
   );
